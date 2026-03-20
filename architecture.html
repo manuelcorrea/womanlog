@@ -1,0 +1,1328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GlucoLog - Architecture &amp; Technical Documentation</title>
+    <style>
+        :root {
+            --primary: #4A6FA5;
+            --primary-dark: #3A5A8C;
+            --primary-light: #E8EEF6;
+            --accent: #6B9AC4;
+            --bg: #F5F7FA;
+            --card: #FFFFFF;
+            --text: #2D3748;
+            --text-light: #718096;
+            --border: #E2E8F0;
+            --code-bg: #1E293B;
+            --code-text: #E2E8F0;
+            --shadow: 0 2px 8px rgba(0,0,0,0.08);
+            --radius: 12px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.7;
+        }
+
+        /* Header */
+        .doc-header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            padding: 40px 20px;
+            text-align: center;
+        }
+
+        .doc-header h1 { font-size: 28px; font-weight: 800; letter-spacing: -0.5px; }
+        .doc-header p { opacity: 0.85; margin-top: 6px; font-size: 15px; }
+
+        .back-link {
+            display: inline-block;
+            margin-top: 14px;
+            color: rgba(255,255,255,0.9);
+            text-decoration: none;
+            font-size: 13px;
+            padding: 6px 16px;
+            border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+
+        .back-link:hover { background: rgba(255,255,255,0.15); }
+
+        /* Layout */
+        .doc-layout {
+            max-width: 960px;
+            margin: 0 auto;
+            display: flex;
+            gap: 24px;
+            padding: 24px 16px;
+        }
+
+        /* Sidebar TOC */
+        .doc-sidebar {
+            width: 220px;
+            flex-shrink: 0;
+            position: sticky;
+            top: 20px;
+            align-self: flex-start;
+            max-height: calc(100vh - 40px);
+            overflow-y: auto;
+        }
+
+        .toc {
+            background: var(--card);
+            border-radius: var(--radius);
+            padding: 16px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+        }
+
+        .toc h3 {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-light);
+            margin-bottom: 10px;
+        }
+
+        .toc a {
+            display: block;
+            padding: 5px 8px;
+            font-size: 13px;
+            color: var(--text-light);
+            text-decoration: none;
+            border-radius: 4px;
+            transition: all 0.15s;
+            border-left: 2px solid transparent;
+        }
+
+        .toc a:hover {
+            background: var(--primary-light);
+            color: var(--primary-dark);
+            border-left-color: var(--primary);
+        }
+
+        .toc a.indent { padding-left: 20px; font-size: 12px; }
+
+        /* Main Content */
+        .doc-content { flex: 1; min-width: 0; }
+
+        .section {
+            background: var(--card);
+            border-radius: var(--radius);
+            padding: 28px;
+            margin-bottom: 20px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+        }
+
+        .section h2 {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 16px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--primary-light);
+        }
+
+        .section h3 {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--primary-dark);
+            margin: 20px 0 10px 0;
+        }
+
+        .section h4 {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text);
+            margin: 16px 0 8px 0;
+        }
+
+        .section p {
+            margin-bottom: 12px;
+            font-size: 14px;
+        }
+
+        .section ul, .section ol {
+            padding-left: 22px;
+            margin-bottom: 14px;
+        }
+
+        .section li {
+            font-size: 14px;
+            margin-bottom: 6px;
+        }
+
+        /* Code Blocks */
+        pre {
+            background: var(--code-bg);
+            color: var(--code-text);
+            padding: 16px 20px;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-size: 13px;
+            line-height: 1.6;
+            margin: 12px 0 16px 0;
+            font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+        }
+
+        code {
+            font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+            font-size: 13px;
+        }
+
+        p code, li code {
+            background: #EDF2F7;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 12.5px;
+            color: var(--primary-dark);
+        }
+
+        /* Highlight Boxes */
+        .highlight {
+            padding: 16px 20px;
+            border-radius: 8px;
+            margin: 14px 0;
+            font-size: 13px;
+        }
+
+        .highlight.blue { background: #EBF5FF; border-left: 4px solid var(--primary); }
+        .highlight.green { background: #E8F5E9; border-left: 4px solid #4CAF50; }
+        .highlight.amber { background: #FFF8E1; border-left: 4px solid #FF9800; }
+        .highlight.purple { background: #F3E5F5; border-left: 4px solid #9C27B0; }
+
+        .highlight strong { display: block; margin-bottom: 4px; }
+
+        /* Diagram */
+        .diagram {
+            background: #F8FAFC;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 20px;
+            margin: 14px 0;
+            font-family: 'SF Mono', monospace;
+            font-size: 12px;
+            line-height: 1.5;
+            white-space: pre;
+            overflow-x: auto;
+        }
+
+        /* Table */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 14px 0;
+            font-size: 13px;
+        }
+
+        th, td {
+            padding: 10px 12px;
+            border: 1px solid var(--border);
+            text-align: left;
+        }
+
+        th {
+            background: var(--primary-light);
+            font-weight: 600;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        tr:nth-child(even) { background: #FAFBFC; }
+
+        /* Badge */
+        .badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .badge.html { background: #FFECB3; color: #E65100; }
+        .badge.css { background: #E1BEE7; color: #6A1B9A; }
+        .badge.js { background: #FFF9C4; color: #F57F17; }
+        .badge.api { background: #B3E5FC; color: #01579B; }
+
+        /* File tree */
+        .file-tree {
+            background: var(--code-bg);
+            color: var(--code-text);
+            padding: 16px 20px;
+            border-radius: 8px;
+            font-family: 'SF Mono', monospace;
+            font-size: 13px;
+            line-height: 1.8;
+            margin: 12px 0;
+        }
+
+        .file-tree .folder { color: #93C5FD; }
+        .file-tree .file { color: #86EFAC; }
+        .file-tree .comment { color: #64748B; }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .doc-layout { flex-direction: column; }
+            .doc-sidebar { width: 100%; position: static; }
+        }
+
+        @media print {
+            .doc-sidebar { display: none; }
+            .section { break-inside: avoid; box-shadow: none; border: 1px solid #ccc; }
+        }
+    </style>
+</head>
+<body>
+
+<header class="doc-header">
+    <h1>GlucoLog Architecture</h1>
+    <p>Complete Technical Documentation &amp; Rebuild Guide</p>
+    <a href="index.html" class="back-link">&larr; Back to App</a>
+</header>
+
+<div class="doc-layout">
+
+<!-- Sidebar TOC -->
+<aside class="doc-sidebar">
+    <nav class="toc">
+        <h3>Contents</h3>
+        <a href="#overview">Overview</a>
+        <a href="#why-single-file">Why Single File HTML</a>
+        <a href="#file-structure">File Structure</a>
+        <a href="#architecture">Architecture Diagram</a>
+        <a href="#data-layer">Data Layer</a>
+        <a class="indent" href="#schema">Data Schema</a>
+        <a class="indent" href="#storage-strategy">Storage Strategy</a>
+        <a class="indent" href="#date-keying">Date Keying</a>
+        <a href="#css-architecture">CSS Architecture</a>
+        <a class="indent" href="#design-tokens">Design Tokens</a>
+        <a class="indent" href="#component-styling">Component Patterns</a>
+        <a class="indent" href="#responsive">Responsive Design</a>
+        <a href="#html-structure">HTML Structure</a>
+        <a class="indent" href="#layout-zones">Layout Zones</a>
+        <a class="indent" href="#modal-system">Modal System</a>
+        <a class="indent" href="#tips-panel">Tips Panel</a>
+        <a href="#js-architecture">JavaScript Architecture</a>
+        <a class="indent" href="#module-map">Module Map</a>
+        <a class="indent" href="#food-crud">Food CRUD</a>
+        <a class="indent" href="#glucose-system">Glucose System</a>
+        <a class="indent" href="#report-engine">Report Engine</a>
+        <a class="indent" href="#share-system">Share System</a>
+        <a href="#clinical-logic">Clinical Logic</a>
+        <a href="#deployment">Deployment</a>
+        <a href="#security">Security Considerations</a>
+        <a href="#rebuild-guide">Rebuild Guide</a>
+        <a href="#extending">Extending the App</a>
+    </nav>
+</aside>
+
+<!-- Main Content -->
+<main class="doc-content">
+
+<!-- 1. OVERVIEW -->
+<div class="section" id="overview">
+    <h2>1. Overview</h2>
+    <p>GlucoLog is a <strong>client-side only, single-file HTML application</strong> designed for women with diabetes to track daily food intake, blood glucose readings, and generate medical reports for healthcare providers.</p>
+
+    <div class="highlight blue">
+        <strong>Key Constraints That Drove Every Decision</strong>
+        <ul style="margin:8px 0 0 18px;">
+            <li>Must deploy on <strong>GitHub Pages</strong> (static hosting, no server)</li>
+            <li>Must be a <strong>single HTML file</strong> (no build step, no bundler)</li>
+            <li>Must work <strong>offline-capable</strong> after first load</li>
+            <li>Must look <strong>professional and medical</strong>, not like a toy</li>
+            <li>Target user: non-technical person on a phone</li>
+        </ul>
+    </div>
+
+    <h3>Tech Stack</h3>
+    <table>
+        <tr>
+            <th>Layer</th>
+            <th>Technology</th>
+            <th>Why This Choice</th>
+        </tr>
+        <tr>
+            <td>Markup</td>
+            <td><span class="badge html">HTML5</span></td>
+            <td>Semantic elements, native form validation, <code>&lt;input type="date"&gt;</code> for date picker</td>
+        </tr>
+        <tr>
+            <td>Styling</td>
+            <td><span class="badge css">CSS3</span></td>
+            <td>Custom properties (design tokens), Flexbox/Grid, no framework overhead</td>
+        </tr>
+        <tr>
+            <td>Logic</td>
+            <td><span class="badge js">Vanilla JS</span></td>
+            <td>Zero dependencies, no build step, ~400 lines total</td>
+        </tr>
+        <tr>
+            <td>Storage</td>
+            <td><span class="badge api">localStorage</span></td>
+            <td>Persistent across sessions, no backend needed, 5-10MB quota</td>
+        </tr>
+        <tr>
+            <td>Hosting</td>
+            <td><span class="badge html">GitHub Pages</span></td>
+            <td>Free, automatic deployment via Actions, HTTPS included</td>
+        </tr>
+    </table>
+</div>
+
+<!-- 2. WHY SINGLE FILE -->
+<div class="section" id="why-single-file">
+    <h2>2. Why Single-File HTML</h2>
+
+    <h3>Advantages</h3>
+    <ul>
+        <li><strong>Zero build pipeline.</strong> No webpack, vite, rollup, npm, or node_modules. Edit the file, push, done.</li>
+        <li><strong>Instant deployment.</strong> GitHub Pages serves the file directly. No CI compilation step needed (the workflow just uploads the file as-is).</li>
+        <li><strong>Offline-friendly.</strong> Once loaded, the browser caches the single file. All logic and data are local.</li>
+        <li><strong>Easy to fork and modify.</strong> Any developer can open one file and see everything.</li>
+        <li><strong>No CORS issues.</strong> No API calls, no cross-origin requests, no tokens.</li>
+    </ul>
+
+    <h3>Trade-offs Accepted</h3>
+    <ul>
+        <li><strong>No code splitting.</strong> The entire app loads at once (~45KB). Acceptable for this app size.</li>
+        <li><strong>No TypeScript.</strong> We lose type safety but gain zero-config simplicity.</li>
+        <li><strong>CSS and JS are not minified.</strong> Compression by the server (gzip) makes this negligible.</li>
+        <li><strong>No component framework.</strong> DOM manipulation is done via <code>innerHTML</code> string templates. This works for a small app but would not scale to 50+ interactive components.</li>
+        <li><strong>No data sync.</strong> Data lives only on the user's device. Clearing browser data deletes everything.</li>
+    </ul>
+
+    <div class="highlight amber">
+        <strong>When to migrate away from single-file</strong>
+        If the app grows beyond ~2,000 lines, or if you need user accounts, cloud sync, or a nutritional database API, migrate to a framework (e.g., React/Next.js or SvelteKit) with a proper backend.
+    </div>
+</div>
+
+<!-- 3. FILE STRUCTURE -->
+<div class="section" id="file-structure">
+    <h2>3. File Structure</h2>
+
+    <div class="file-tree">
+<span class="folder">womanlog/</span>
+├── <span class="file">index.html</span>              <span class="comment"># The entire application (HTML + CSS + JS)</span>
+├── <span class="file">architecture.html</span>       <span class="comment"># This documentation page</span>
+├── <span class="file">README.md</span>               <span class="comment"># Project overview</span>
+└── <span class="folder">.github/</span>
+    └── <span class="folder">workflows/</span>
+        └── <span class="file">deploy.yml</span>      <span class="comment"># GitHub Pages deployment workflow</span>
+    </div>
+
+    <h3>File Responsibilities</h3>
+    <table>
+        <tr><th>File</th><th>Size</th><th>Purpose</th></tr>
+        <tr><td><code>index.html</code></td><td>~1,950 lines</td><td>Full app: styles (lines 7-856), HTML structure (858-1090), nutrition tips content (1092-1360), modals (1362-1440), JavaScript (1442-1940)</td></tr>
+        <tr><td><code>architecture.html</code></td><td>~1,200 lines</td><td>This technical documentation, linked from the app footer</td></tr>
+        <tr><td><code>deploy.yml</code></td><td>~28 lines</td><td>GitHub Actions workflow: checkout &rarr; configure-pages &rarr; upload-artifact &rarr; deploy</td></tr>
+    </table>
+</div>
+
+<!-- 4. ARCHITECTURE DIAGRAM -->
+<div class="section" id="architecture">
+    <h2>4. Architecture Diagram</h2>
+
+    <div class="diagram">
+┌─────────────────────────────────────────────────────────────┐
+│                        BROWSER                               │
+│                                                              │
+│  ┌──────────────────────────────────────────────────────┐   │
+│  │                   PRESENTATION LAYER                  │   │
+│  │                                                       │   │
+│  │  ┌─────────┐ ┌──────────┐ ┌─────────┐ ┌──────────┐  │   │
+│  │  │ Header  │ │  Daily   │ │ Glucose │ │  Food    │  │   │
+│  │  │  Bar    │ │ Summary  │ │ Section │ │  Form    │  │   │
+│  │  └────┬────┘ └────┬─────┘ └────┬────┘ └────┬─────┘  │   │
+│  │       │           │            │            │         │   │
+│  │  ┌────┴───┐  ┌────┴────┐  ┌───┴────┐  ┌───┴─────┐  │   │
+│  │  │ Tips   │  │  Food   │  │Glucose │  │  Quick  │  │   │
+│  │  │ Panel  │  │  Log    │  │  Log   │  │  Add    │  │   │
+│  │  └────────┘  └────┬────┘  └────────┘  │ Buttons │  │   │
+│  │                    │                    └─────────┘  │   │
+│  │  ┌────────────┐   │   ┌───────────────┐             │   │
+│  │  │Share Modal │   │   │ Report Modal  │             │   │
+│  │  │  (export)  │   │   │  (medical)   │             │   │
+│  │  └──────┬─────┘   │   └──────┬────────┘             │   │
+│  └─────────┼─────────┼──────────┼──────────────────────┘   │
+│            │         │          │                            │
+│  ┌─────────┴─────────┴──────────┴──────────────────────┐   │
+│  │                   LOGIC LAYER (JS)                    │   │
+│  │                                                       │   │
+│  │  ┌───────────┐ ┌───────────┐ ┌────────────────────┐  │   │
+│  │  │ Food CRUD │ │  Glucose  │ │  Report Generator  │  │   │
+│  │  │ addEntry  │ │ logGluc.  │ │  generateReport()  │  │   │
+│  │  │ deleteEnt │ │ deleteGl. │ │  emailReport()     │  │   │
+│  │  │ quickAdd  │ │ getStatus │ │  openShareModal()  │  │   │
+│  │  └─────┬─────┘ └─────┬─────┘ └─────────┬──────────┘  │   │
+│  │        │              │                  │             │   │
+│  │  ┌─────┴──────────────┴──────────────────┴──────────┐ │   │
+│  │  │              RENDERING ENGINE                     │ │   │
+│  │  │  renderFoodLog()  renderGlucoseLog()              │ │   │
+│  │  │  updateDailySummary()  loadDate()                 │ │   │
+│  │  └─────────────────────┬─────────────────────────────┘ │   │
+│  └────────────────────────┼───────────────────────────────┘   │
+│                           │                                    │
+│  ┌────────────────────────┴───────────────────────────────┐   │
+│  │                    DATA LAYER                           │   │
+│  │                                                         │   │
+│  │  getData() ──► localStorage.getItem('glucolog_data')    │   │
+│  │  saveData() ──► localStorage.setItem('glucolog_data')   │   │
+│  │                                                         │   │
+│  │  Shape: { entries: {}, glucose: {}, settings: {} }      │   │
+│  └─────────────────────────────────────────────────────────┘   │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+    </div>
+
+    <p>The architecture follows a <strong>three-layer pattern</strong>:</p>
+    <ol>
+        <li><strong>Presentation Layer</strong> &mdash; HTML structure + CSS. Pure visual layout, no logic.</li>
+        <li><strong>Logic Layer</strong> &mdash; JavaScript functions organized by domain (food, glucose, reports). Handles user actions and calls the rendering engine.</li>
+        <li><strong>Data Layer</strong> &mdash; Two functions (<code>getData()</code>, <code>saveData()</code>) that abstract all localStorage access behind a single JSON object.</li>
+    </ol>
+</div>
+
+<!-- 5. DATA LAYER -->
+<div class="section" id="data-layer">
+    <h2>5. Data Layer</h2>
+
+    <h3 id="schema">Data Schema</h3>
+    <p>All application state lives in a single localStorage key: <code>glucolog_data</code>. The value is a JSON object with three top-level namespaces:</p>
+
+    <pre>{
+  "entries": {
+    "2026-03-20": [
+      {
+        "id": 1710936000000,      // Date.now() at creation - unique ID
+        "name": "Oatmeal (1 cup)", // Free-text food name
+        "meal": "Breakfast",       // Enum: Breakfast|Lunch|Dinner|Snack
+        "calories": 150,           // kcal (integer)
+        "carbs": 27,               // grams (float)
+        "sugar": 1,                // grams (float)
+        "fiber": 4,                // grams (float)
+        "protein": 5,              // grams (float)
+        "portion": "1 cup",        // Free-text portion description
+        "notes": "",               // Free-text user notes
+        "time": "08:30 AM"         // Display time (from toLocaleTimeString)
+      }
+    ]
+  },
+  "glucose": {
+    "2026-03-20": [
+      {
+        "id": 1710936060000,       // Date.now() unique ID
+        "value": 112,              // mg/dL (integer, range 30-600)
+        "context": "fasting",      // Enum: fasting|before-meal|after-meal-1h|
+                                   //       after-meal-2h|bedtime
+        "time": "07:15 AM"         // Display time
+      }
+    ]
+  },
+  "settings": {
+    "patientName": "Jane Doe",     // Persisted for report generation
+    "doctorName": "Dr. Smith",     // Persisted for report generation
+    "diabetesType": "Type 2"       // Enum: Type 1|Type 2|Gestational|Prediabetes
+  }
+}</pre>
+
+    <h3 id="storage-strategy">Storage Strategy</h3>
+
+    <h4>Why localStorage (not IndexedDB, not cookies)</h4>
+    <table>
+        <tr><th>Option</th><th>Verdict</th><th>Reasoning</th></tr>
+        <tr><td>localStorage</td><td>Chosen</td><td>Synchronous API, simple JSON serialization, 5-10MB quota (enough for years of food logs), universal browser support</td></tr>
+        <tr><td>IndexedDB</td><td>Rejected</td><td>Async API adds complexity. Needed for large binary data or complex queries. Overkill for structured JSON < 1MB.</td></tr>
+        <tr><td>Cookies</td><td>Rejected</td><td>4KB limit, sent with every HTTP request, not designed for application state</td></tr>
+        <tr><td>sessionStorage</td><td>Rejected</td><td>Cleared when tab closes. Data must persist across sessions.</td></tr>
+    </table>
+
+    <h4>Read/Write Pattern</h4>
+    <pre>// READ: Deserialize entire state from localStorage
+function getData() {
+    const raw = localStorage.getItem('glucolog_data');
+    return raw ? JSON.parse(raw) : { entries: {}, glucose: {}, settings: {} };
+}
+
+// WRITE: Serialize entire state back to localStorage
+function saveData(data) {
+    localStorage.setItem('glucolog_data', JSON.stringify(data));
+}</pre>
+
+    <div class="highlight amber">
+        <strong>Design Decision: Full Overwrite vs. Granular Updates</strong>
+        We read and write the <em>entire</em> JSON object on every operation. This is intentionally simple. For a food tracker with ~10-30 entries per day, the serialization cost is negligible (< 1ms). A granular approach (patching specific keys) would add complexity without measurable benefit at this data scale.
+    </div>
+
+    <h3 id="date-keying">Date Keying</h3>
+    <p>Both <code>entries</code> and <code>glucose</code> use ISO date strings (<code>"2026-03-20"</code>) as object keys. This design:</p>
+    <ul>
+        <li><strong>Enables O(1) lookup</strong> for any date's data &mdash; no filtering arrays.</li>
+        <li><strong>Natural partitioning</strong> &mdash; each day is isolated, no cross-day contamination.</li>
+        <li><strong>String-sortable</strong> &mdash; ISO dates sort lexicographically, enabling date range iterations in the report engine.</li>
+    </ul>
+
+    <pre>// Date key generation
+function getDateKey(date) {
+    return date.toISOString().split('T')[0];  // "2026-03-20"
+}
+
+// Current view's date key (from the date input element)
+function getCurrentDateKey() {
+    return document.getElementById('currentDate').value;
+}</pre>
+</div>
+
+<!-- 6. CSS ARCHITECTURE -->
+<div class="section" id="css-architecture">
+    <h2>6. CSS Architecture</h2>
+
+    <h3 id="design-tokens">Design Token System</h3>
+    <p>All visual values are defined as CSS custom properties on <code>:root</code>. This serves as the single source of truth for the entire visual language:</p>
+
+    <pre>:root {
+    /* Color Palette - Medical/Professional */
+    --primary: #4A6FA5;       /* Steel blue - main brand color */
+    --primary-dark: #3A5A8C;  /* Darker shade for gradients, hover */
+    --primary-light: #E8EEF6; /* Tinted backgrounds, highlights */
+    --accent: #6B9AC4;        /* Focus rings, secondary actions */
+
+    /* Semantic Colors */
+    --success: #4CAF50;       /* Email button, positive states */
+    --warning: #FF9800;       /* Elevated glucose, carb warnings */
+    --danger: #E53935;        /* High glucose, sugar danger */
+
+    /* Neutral Palette */
+    --bg: #F5F7FA;            /* Page background */
+    --card: #FFFFFF;          /* Card surfaces */
+    --text: #2D3748;          /* Primary text */
+    --text-light: #718096;    /* Labels, secondary text */
+    --border: #E2E8F0;        /* All borders */
+
+    /* Shared Values */
+    --shadow: 0 2px 8px rgba(0,0,0,0.08);  /* Card elevation */
+    --radius: 12px;                          /* Card border radius */
+}</pre>
+
+    <div class="highlight green">
+        <strong>Why these specific colors?</strong>
+        The palette was chosen for a <strong>medical/clinical feel</strong>. Steel blue (#4A6FA5) is used extensively in healthcare UIs (patient portals, EHR systems) because it communicates trust and professionalism. The warning/danger colors follow universal conventions (amber = caution, red = alert) critical for a medical context where misreading glucose status could have health consequences.
+    </div>
+
+    <h3 id="component-styling">Component Styling Patterns</h3>
+
+    <h4>Card Pattern (used by every section)</h4>
+    <pre>/* Every major UI section follows this card pattern */
+.some-section {
+    background: var(--card);           /* White surface */
+    border-radius: var(--radius);      /* 12px rounded corners */
+    padding: 16px;                     /* Consistent internal spacing */
+    margin-bottom: 16px;               /* Vertical rhythm */
+    box-shadow: var(--shadow);         /* Subtle elevation */
+    border: 1px solid var(--border);   /* Defined edge (not just shadow) */
+}</pre>
+
+    <h4>Section Header Pattern</h4>
+    <pre>/* All section headers use the same typographic treatment */
+.section h3 {
+    font-size: 13px;
+    color: var(--text-light);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 12px;
+}
+/* This creates a clinical, form-like labeling style */</pre>
+
+    <h4>Button Hierarchy</h4>
+    <table>
+        <tr><th>Class</th><th>Usage</th><th>Visual</th></tr>
+        <tr><td><code>.btn-primary</code></td><td>Main actions (Add food, Log glucose)</td><td>Blue gradient, full-width, bold</td></tr>
+        <tr><td><code>.header-btn</code></td><td>Header navigation (Tips, Share, Report)</td><td>Semi-transparent white on blue</td></tr>
+        <tr><td><code>.btn-copy</code></td><td>Copy to clipboard in modals</td><td>Solid blue, medium width</td></tr>
+        <tr><td><code>.btn-email</code></td><td>Open email client</td><td>Green (#4CAF50), medium width</td></tr>
+        <tr><td><code>.btn-secondary</code></td><td>Cancel / Close</td><td>Gray background, bordered</td></tr>
+        <tr><td><code>.quick-food-btn</code></td><td>Quick-add food chips</td><td>Pill-shaped, bordered, small</td></tr>
+        <tr><td><code>.delete-btn</code></td><td>Remove entry</td><td>Invisible until hover, then red</td></tr>
+    </table>
+
+    <h4>Color-Coded Status System</h4>
+    <pre>/* Macro boxes change color based on daily totals */
+.macro-item.warning .macro-value { color: var(--warning); }  /* Carbs > 130g */
+.macro-item.warning { background: #FFF3E0; }
+.macro-item.danger .macro-value { color: var(--danger); }    /* Carbs > 200g */
+.macro-item.danger { background: #FFEBEE; }
+
+/* Glucose badges use clinical traffic-light convention */
+.glucose-badge.normal   { background: #E8F5E9; color: #2E7D32; }  /* 70-100 */
+.glucose-badge.elevated { background: #FFF3E0; color: #E65100; }  /* 101-140 */
+.glucose-badge.high     { background: #FFEBEE; color: #C62828; }  /* >140 or <70 */</pre>
+
+    <h3 id="responsive">Responsive Design</h3>
+    <p>The app uses a <strong>mobile-first, single-column layout</strong> capped at <code>max-width: 600px</code>. This was deliberate: food tracking is primarily a phone activity done at meal times.</p>
+
+    <pre>/* Base layout - already mobile-optimized */
+.main {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 16px;
+}
+
+/* Only breakpoint: small phones (< 480px) */
+@media (max-width: 480px) {
+    .macro-grid { grid-template-columns: repeat(2, 1fr); }  /* 4-col → 2-col */
+    .header-btn span.btn-text { display: none; }             /* Hide button labels */
+    .glucose-input-row { flex-wrap: wrap; }                   /* Stack glucose fields */
+    .glucose-input-row .field { min-width: calc(50% - 5px); }
+}</pre>
+
+    <div class="highlight blue">
+        <strong>Why only one breakpoint?</strong>
+        The 600px max-width means the app looks identical on tablet and desktop &mdash; just centered with whitespace. This is intentional for a medical tool: consistency across devices reduces user confusion. The only adaptation is for very small phones where the 4-column macro grid becomes 2-column.
+    </div>
+</div>
+
+<!-- 7. HTML STRUCTURE -->
+<div class="section" id="html-structure">
+    <h2>7. HTML Structure</h2>
+
+    <h3 id="layout-zones">Layout Zones (Top to Bottom)</h3>
+    <p>The app renders as a <strong>vertical scroll of cards</strong>, each representing one functional zone:</p>
+
+    <table>
+        <tr><th>#</th><th>Zone</th><th>HTML Element</th><th>Purpose</th></tr>
+        <tr><td>1</td><td>Header</td><td><code>&lt;header class="header"&gt;</code></td><td>Sticky top bar with logo + 3 action buttons (Tips, Share, Report)</td></tr>
+        <tr><td>2</td><td>Date Nav</td><td><code>&lt;div class="date-nav"&gt;</code></td><td>Previous/Next day arrows + native date picker input</td></tr>
+        <tr><td>3</td><td>Daily Summary</td><td><code>&lt;div class="daily-summary"&gt;</code></td><td>4-cell grid showing total calories, carbs, sugar, fiber</td></tr>
+        <tr><td>4</td><td>Glucose</td><td><code>&lt;div class="glucose-section"&gt;</code></td><td>Glucose input (mg/dL + context) + log of today's readings</td></tr>
+        <tr><td>5</td><td>Food Form</td><td><code>&lt;div class="entry-form"&gt;</code></td><td>Quick-add buttons + full form (name, meal, macros, notes)</td></tr>
+        <tr><td>6</td><td>Tips Panel</td><td><code>&lt;div class="tips-panel"&gt;</code></td><td>Hidden by default. 7-tab nutrition education content</td></tr>
+        <tr><td>7</td><td>Food Log</td><td><code>&lt;div class="food-log"&gt;</code></td><td>Dynamically rendered meal groups with entries</td></tr>
+    </table>
+
+    <h3>Sticky Header Technique</h3>
+    <pre>&lt;header class="header"&gt;   /* position: sticky; top: 0; z-index: 100; */
+    &lt;div class="header-inner"&gt;  /* max-width: 600px for content alignment */
+        &lt;div class="logo"&gt;...&lt;/div&gt;
+        &lt;div class="header-actions"&gt;
+            &lt;button onclick="toggleTips()"&gt;...&lt;/button&gt;
+            &lt;button onclick="openShareModal()"&gt;...&lt;/button&gt;
+            &lt;button onclick="openReportModal()"&gt;...&lt;/button&gt;
+        &lt;/div&gt;
+    &lt;/div&gt;
+&lt;/header&gt;</pre>
+    <p>The header uses <code>position: sticky</code> so it stays visible while scrolling. The <code>z-index: 100</code> ensures it sits above card content but below modals (<code>z-index: 200</code>) and toasts (<code>z-index: 300</code>).</p>
+
+    <h4>Z-Index Stack</h4>
+    <table>
+        <tr><th>Layer</th><th>Z-Index</th><th>Element</th></tr>
+        <tr><td>Base content</td><td>auto</td><td>Cards, form, food log</td></tr>
+        <tr><td>Header</td><td>100</td><td>Sticky header bar</td></tr>
+        <tr><td>Modals</td><td>200</td><td>Share modal, Report modal overlays</td></tr>
+        <tr><td>Toast</td><td>300</td><td>Notification toast (must be above modals)</td></tr>
+    </table>
+
+    <h3 id="modal-system">Modal System</h3>
+    <p>Modals use a <strong>overlay + centered flex</strong> pattern:</p>
+
+    <pre>&lt;div class="modal-overlay" id="shareModal"&gt;  &lt;!-- Fixed fullscreen backdrop --&gt;
+    &lt;div class="modal"&gt;                         &lt;!-- Centered content box --&gt;
+        &lt;div class="modal-header"&gt;...&lt;/div&gt;    &lt;!-- Sticky top with close button --&gt;
+        &lt;div class="modal-body"&gt;...&lt;/div&gt;      &lt;!-- Scrollable content --&gt;
+        &lt;div class="modal-actions"&gt;...&lt;/div&gt;   &lt;!-- Sticky bottom with buttons --&gt;
+    &lt;/div&gt;
+&lt;/div&gt;</pre>
+
+    <p><strong>Open/close mechanism:</strong></p>
+    <pre>// Show: add .active class (switches display: none → flex)
+document.getElementById('shareModal').classList.add('active');
+
+// Close: remove .active class
+function closeModal(id) {
+    document.getElementById(id).classList.remove('active');
+}
+
+// Close on backdrop click (event delegation)
+document.querySelectorAll('.modal-overlay').forEach(overlay =&gt; {
+    overlay.addEventListener('click', (e) =&gt; {
+        if (e.target === overlay) overlay.classList.remove('active');
+    });
+});</pre>
+
+    <h3 id="tips-panel">Tips Panel Architecture</h3>
+    <p>The tips panel is a <strong>tabbed content section</strong> that is hidden by default and toggled via the header button:</p>
+
+    <pre>// Structure: header + nav tabs + content sections
+&lt;div class="tips-panel" id="tipsPanel"&gt;     &lt;!-- display:none by default --&gt;
+    &lt;div class="tips-panel-header"&gt;...&lt;/div&gt;
+    &lt;div class="tips-nav"&gt;                    &lt;!-- Horizontal scrollable tab bar --&gt;
+        &lt;button class="tips-tab active"
+                onclick="showTipTab('best-foods', this)"&gt;Best Foods&lt;/button&gt;
+        ...7 tabs total
+    &lt;/div&gt;
+    &lt;div class="tips-content"&gt;
+        &lt;div class="tip-section active" id="tip-best-foods"&gt;...&lt;/div&gt;
+        &lt;div class="tip-section" id="tip-avoid"&gt;...&lt;/div&gt;
+        ...one section per tab (display:none unless .active)
+    &lt;/div&gt;
+&lt;/div&gt;
+
+// Tab switching: remove .active from all, add to selected
+function showTipTab(tabId, btn) {
+    document.querySelectorAll('.tip-section').forEach(s =&gt; s.classList.remove('active'));
+    document.querySelectorAll('.tips-tab').forEach(t =&gt; t.classList.remove('active'));
+    document.getElementById('tip-' + tabId).classList.add('active');
+    btn.classList.add('active');
+}</pre>
+</div>
+
+<!-- 8. JAVASCRIPT ARCHITECTURE -->
+<div class="section" id="js-architecture">
+    <h2>8. JavaScript Architecture</h2>
+
+    <h3 id="module-map">Module Map</h3>
+    <p>The JS is organized into <strong>clearly commented sections</strong> (pseudo-modules). Since this is a single file with no import/export, comments serve as module boundaries:</p>
+
+    <table>
+        <tr><th>Section</th><th>Functions</th><th>Responsibility</th></tr>
+        <tr>
+            <td>DATA LAYER</td>
+            <td><code>getData()</code>, <code>saveData()</code>, <code>getDateKey()</code>, <code>getCurrentDateKey()</code></td>
+            <td>All localStorage access. Every other function goes through these.</td>
+        </tr>
+        <tr>
+            <td>INITIALIZATION</td>
+            <td><code>init()</code>, <code>changeDate()</code>, <code>loadDate()</code></td>
+            <td>App bootstrap, date navigation, triggering re-renders.</td>
+        </tr>
+        <tr>
+            <td>FOOD ENTRIES</td>
+            <td><code>addFoodEntry()</code>, <code>quickAdd()</code>, <code>deleteEntry()</code></td>
+            <td>CRUD operations for food items.</td>
+        </tr>
+        <tr>
+            <td>GLUCOSE</td>
+            <td><code>logGlucose()</code>, <code>deleteGlucose()</code>, <code>getGlucoseStatus()</code>, <code>getContextLabel()</code></td>
+            <td>Blood glucose recording and clinical classification.</td>
+        </tr>
+        <tr>
+            <td>RENDERING</td>
+            <td><code>renderFoodLog()</code>, <code>renderGlucoseLog()</code>, <code>updateDailySummary()</code></td>
+            <td>DOM updates. Read data, build HTML strings, set innerHTML.</td>
+        </tr>
+        <tr>
+            <td>SHARE</td>
+            <td><code>openShareModal()</code></td>
+            <td>Generates plain-text formatted log for the current day.</td>
+        </tr>
+        <tr>
+            <td>REPORT</td>
+            <td><code>openReportModal()</code>, <code>generateReport()</code>, <code>emailReport()</code></td>
+            <td>Multi-day medical report generation with glucose statistics.</td>
+        </tr>
+        <tr>
+            <td>TIPS</td>
+            <td><code>toggleTips()</code>, <code>showTipTab()</code></td>
+            <td>Education panel visibility and tab navigation.</td>
+        </tr>
+        <tr>
+            <td>UTILITIES</td>
+            <td><code>closeModal()</code>, <code>copyToClipboard()</code>, <code>showToast()</code>, <code>escapeHtml()</code></td>
+            <td>Shared helpers used across modules.</td>
+        </tr>
+    </table>
+
+    <h3 id="food-crud">Food CRUD in Detail</h3>
+
+    <h4>Create (addFoodEntry)</h4>
+    <pre>function addFoodEntry() {
+    // 1. Validate: name is required
+    const name = document.getElementById('foodName').value.trim();
+    if (!name) { showToast('Please enter a food name'); return; }
+
+    // 2. Build entry object from form fields
+    const entry = {
+        id: Date.now(),  // Millisecond timestamp = unique enough for single-user
+        name: name,
+        meal: document.getElementById('mealType').value,
+        calories: parseFloat(document.getElementById('calories').value) || 0,
+        carbs: parseFloat(document.getElementById('carbs').value) || 0,
+        // ... other macros
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    };
+
+    // 3. Insert into date-keyed array
+    const dateKey = getCurrentDateKey();
+    const data = getData();
+    if (!data.entries[dateKey]) data.entries[dateKey] = [];
+    data.entries[dateKey].push(entry);
+    saveData(data);
+
+    // 4. Clear form + re-render
+    // ... reset all input values
+    loadDate();         // Triggers renderFoodLog + updateDailySummary
+    showToast('Food entry added');
+}</pre>
+
+    <h4>Quick Add Pattern</h4>
+    <pre>// Quick-add buttons call the same addFoodEntry() but pre-fill the form first
+function quickAdd(name, meal, cal, carbs, sugar, fiber, protein) {
+    document.getElementById('foodName').value = name;
+    document.getElementById('mealType').value = meal;
+    document.getElementById('calories').value = cal;
+    // ... set other fields
+    addFoodEntry();  // Reuse the same create flow
+}
+
+// In HTML: onclick="quickAdd('Oatmeal (1 cup)', 'Breakfast', 150, 27, 1, 4, 5)"</pre>
+
+    <div class="highlight green">
+        <strong>Why this approach?</strong> Quick-add and manual entry share the <em>same code path</em>. No duplication. The quick-add buttons are just a UX shortcut that pre-fills the form and submits it. This means any validation or logic change in <code>addFoodEntry()</code> automatically applies to quick-adds too.
+    </div>
+
+    <h4>Delete</h4>
+    <pre>function deleteEntry(id) {
+    const dateKey = getCurrentDateKey();
+    const data = getData();
+    // Filter out the entry by its unique timestamp ID
+    data.entries[dateKey] = data.entries[dateKey].filter(e =&gt; e.id !== id);
+    saveData(data);
+    loadDate();  // Re-render
+}</pre>
+
+    <h4>Rendering (Food Log)</h4>
+    <pre>function renderFoodLog() {
+    const entries = data.entries[dateKey] || [];
+
+    // 1. Empty state check
+    if (entries.length === 0) {
+        container.innerHTML = '&lt;div class="empty-state"&gt;...&lt;/div&gt;';
+        return;
+    }
+
+    // 2. Group entries by meal type
+    const mealOrder = ['Breakfast', 'Lunch', 'Dinner', 'Snack'];
+    const grouped = {};
+    entries.forEach(e =&gt; {
+        if (!grouped[e.meal]) grouped[e.meal] = [];
+        grouped[e.meal].push(e);
+    });
+
+    // 3. Build HTML string (meal group → entries within)
+    let html = '';
+    mealOrder.forEach(meal =&gt; {
+        if (!grouped[meal]) return;
+        html += '&lt;div class="meal-group"&gt;...';
+        // Each entry gets its macros displayed + a delete button
+    });
+
+    container.innerHTML = html;
+}</pre>
+
+    <div class="highlight amber">
+        <strong>innerHTML vs. DOM API</strong>
+        We use <code>innerHTML</code> with string concatenation rather than <code>createElement</code>/<code>appendChild</code>. This is a conscious trade-off: string templates are far more readable for HTML generation and adequate for our data size. The entire food log is re-rendered on every change (not diffed). For < 100 entries per day, this is imperceptible. A framework like React or Svelte would be warranted at larger scale.
+    </div>
+
+    <h3 id="glucose-system">Glucose System</h3>
+
+    <pre>// Clinical classification of glucose readings
+function getGlucoseStatus(value) {
+    if (value &lt; 70)  return { label: 'Low', cls: 'high' };     // Hypoglycemia → red
+    if (value &lt;= 100) return { label: 'Normal', cls: 'normal' }; // Green
+    if (value &lt;= 140) return { label: 'Elevated', cls: 'elevated' }; // Amber
+    return { label: 'High', cls: 'high' };                        // Hyperglycemia → red
+}
+
+// Note: "Low" uses the 'high' CSS class (red) intentionally —
+// both hypo and hyperglycemia are dangerous conditions</pre>
+
+    <h3 id="report-engine">Report Generation Engine</h3>
+    <p>The report generator is the most complex function (~100 lines). It:</p>
+
+    <ol>
+        <li><strong>Accepts parameters</strong> from the modal form: patient name, doctor name, diabetes type, date range (1-30 days), additional notes.</li>
+        <li><strong>Iterates over the date range</strong> using a <code>for</code> loop with <code>Date</code> objects, collecting food entries and glucose readings per day.</li>
+        <li><strong>Computes aggregate statistics:</strong>
+            <ul>
+                <li>Average daily calories, carbs, sugar, fiber, protein</li>
+                <li>Glucose: average, min, max, time-in-range percentage</li>
+                <li>Hyperglycemia count (&gt;180 mg/dL)</li>
+                <li>Hypoglycemia count (&lt;70 mg/dL)</li>
+            </ul>
+        </li>
+        <li><strong>Formats as plain text</strong> with monospace-friendly alignment (column widths, separator lines). This ensures the report looks professional when pasted into an email.</li>
+        <li><strong>Includes a medical disclaimer</strong> at the bottom: "Data has not been independently verified."</li>
+    </ol>
+
+    <pre>// Report output format (plain text, monospace-aligned)
+PATIENT NUTRITION &amp; GLUCOSE MONITORING REPORT
+====================================================
+
+Date Generated:   March 20, 2026
+Reporting Period:  March 14, 2026 - March 20, 2026
+Days with Data:    5 of 7 days
+
+PATIENT INFORMATION
+----------------------------------------
+Patient Name:      Jane Doe
+Attending Provider: Dr. Smith
+Diagnosis:         Diabetes Mellitus, Type 2
+
+BLOOD GLUCOSE SUMMARY
+----------------------------------------
+Total Readings:    14
+Average:           128 mg/dL
+Range:             89 - 195 mg/dL
+Time in Range:     79% (70-180 mg/dL)
+...
+</pre>
+
+    <h3 id="share-system">Share &amp; Email System</h3>
+
+    <h4>Share Modal</h4>
+    <p>Generates a <strong>single-day formatted text</strong> with glucose readings + food entries grouped by meal + daily totals. Uses <code>textContent</code> to set the content (no HTML injection risk).</p>
+
+    <h4>Copy to Clipboard</h4>
+    <pre>function copyToClipboard(elementId) {
+    const text = document.getElementById(elementId).textContent;
+
+    // Modern API (requires HTTPS or localhost)
+    navigator.clipboard.writeText(text).then(() =&gt; {
+        showToast('Copied to clipboard');
+    }).catch(() =&gt; {
+        // Fallback for older browsers or HTTP contexts
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        showToast('Copied to clipboard');
+    });
+}</pre>
+
+    <h4>Email Integration</h4>
+    <pre>function emailReport() {
+    const subject = encodeURIComponent(`Nutrition &amp; Glucose Report - ${patientName}`);
+    const body = encodeURIComponent(`Dear ${doctorName},\n\n...${report}...`);
+
+    // Opens the user's default email client with pre-filled fields
+    window.location.href = `mailto:?subject=${subject}&amp;body=${body}`;
+}
+// Note: mailto: has URL length limits (~2000 chars in some clients).
+// For very long reports, the user should use Copy to Clipboard instead.</pre>
+</div>
+
+<!-- 9. CLINICAL LOGIC -->
+<div class="section" id="clinical-logic">
+    <h2>9. Clinical Logic &amp; Thresholds</h2>
+
+    <p>The app uses several clinically-informed thresholds. These are <strong>not diagnostic</strong> &mdash; they are visual indicators to help users spot patterns.</p>
+
+    <table>
+        <tr><th>Metric</th><th>Threshold</th><th>Visual</th><th>Clinical Basis</th></tr>
+        <tr><td>Glucose</td><td>&lt; 70 mg/dL</td><td>Red badge "Low"</td><td>ADA hypoglycemia threshold</td></tr>
+        <tr><td>Glucose</td><td>70-100 mg/dL</td><td>Green badge "Normal"</td><td>ADA normal fasting range</td></tr>
+        <tr><td>Glucose</td><td>101-140 mg/dL</td><td>Amber badge "Elevated"</td><td>Pre-diabetes / post-meal range</td></tr>
+        <tr><td>Glucose</td><td>&gt; 140 mg/dL</td><td>Red badge "High"</td><td>ADA hyperglycemia concern</td></tr>
+        <tr><td>Daily Carbs</td><td>&gt; 130g</td><td>Amber total box</td><td>Low-carb threshold for diabetes management</td></tr>
+        <tr><td>Daily Carbs</td><td>&gt; 200g</td><td>Red total box</td><td>Typically excessive for diabetic patients</td></tr>
+        <tr><td>Daily Sugar</td><td>&gt; 25g</td><td>Amber total box</td><td>WHO recommended limit for added sugars</td></tr>
+        <tr><td>Daily Sugar</td><td>&gt; 50g</td><td>Red total box</td><td>Significantly elevated for diabetic patients</td></tr>
+        <tr><td>Report: Time in Range</td><td>70-180 mg/dL</td><td>Percentage in report</td><td>ADA/EASD consensus on TIR target (&gt;70%)</td></tr>
+    </table>
+
+    <div class="highlight purple">
+        <strong>Important Disclaimer</strong>
+        These thresholds are general population guidelines. Individual targets vary based on diabetes type, medications, age, pregnancy status, and physician guidance. The app explicitly states in reports: "Data has not been independently verified. Please review with the patient during consultation."
+    </div>
+</div>
+
+<!-- 10. DEPLOYMENT -->
+<div class="section" id="deployment">
+    <h2>10. Deployment Pipeline</h2>
+
+    <h3>GitHub Actions Workflow</h3>
+    <pre># .github/workflows/deploy.yml
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]          # Trigger: any push to main
+  workflow_dispatch:            # Also allow manual trigger
+
+permissions:
+  contents: read               # Read repo files
+  pages: write                 # Write to Pages
+  id-token: write              # OIDC token for Pages deployment
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4           # 1. Clone repo
+      - uses: actions/configure-pages@v5    # 2. Configure Pages
+      - uses: actions/upload-pages-artifact@v3  # 3. Upload root dir
+        with:
+          path: .                           #    (entire repo = site)
+      - uses: actions/deploy-pages@v4       # 4. Deploy to Pages CDN</pre>
+
+    <h3>Deployment Flow</h3>
+    <div class="diagram">
+Developer pushes to main
+        │
+        ▼
+GitHub Actions triggered
+        │
+        ▼
+actions/checkout@v4 ── clones repo
+        │
+        ▼
+actions/configure-pages@v5 ── sets up Pages environment
+        │
+        ▼
+actions/upload-pages-artifact@v3 ── tars the root directory
+        │                              (index.html, architecture.html, etc.)
+        ▼
+actions/deploy-pages@v4 ── deploys to GitHub Pages CDN
+        │
+        ▼
+Live at: https://manuelcorrea.github.io/womanlog/
+    </div>
+
+    <h3>Setup Required (One-Time)</h3>
+    <ol>
+        <li>Go to repository <strong>Settings &rarr; Pages</strong></li>
+        <li>Under "Source", select <strong>GitHub Actions</strong></li>
+        <li>Merge the PR to <code>main</code></li>
+        <li>The workflow runs automatically and the site goes live</li>
+    </ol>
+</div>
+
+<!-- 11. SECURITY -->
+<div class="section" id="security">
+    <h2>11. Security Considerations</h2>
+
+    <h3>XSS Protection</h3>
+    <pre>// All user-generated text is escaped before insertion into innerHTML
+function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str;      // textContent auto-escapes
+    return div.innerHTML;       // Returns escaped HTML entities
+}
+
+// Used everywhere user data appears:
+// &lt;div class="food-name"&gt;${escapeHtml(e.name)}&lt;/div&gt;</pre>
+
+    <p>Without this, a user entering <code>&lt;script&gt;alert('xss')&lt;/script&gt;</code> as a food name would execute arbitrary JavaScript. The <code>escapeHtml()</code> function converts <code>&lt;</code> to <code>&amp;lt;</code> and <code>&gt;</code> to <code>&amp;gt;</code>, rendering the input as harmless text.</p>
+
+    <h3>Data Privacy</h3>
+    <ul>
+        <li><strong>All data stays on-device.</strong> No network requests, no analytics, no cookies, no tracking.</li>
+        <li><strong>No authentication.</strong> Anyone with physical access to the device can view the data.</li>
+        <li><strong>localStorage is domain-scoped.</strong> Other websites cannot access GlucoLog's data.</li>
+        <li><strong>Email report uses <code>mailto:</code>.</strong> The report content passes through the OS email client, not through any server.</li>
+    </ul>
+
+    <h3>Input Validation</h3>
+    <ul>
+        <li>Glucose values are bounded: <code>min="30" max="600"</code> (validated in JS too)</li>
+        <li>Numeric fields use <code>type="number"</code> with <code>min="0"</code></li>
+        <li>Food name is required (empty string check in JS)</li>
+        <li><code>parseFloat() || 0</code> ensures NaN inputs default to zero, not corrupt data</li>
+    </ul>
+</div>
+
+<!-- 12. REBUILD GUIDE -->
+<div class="section" id="rebuild-guide">
+    <h2>12. Rebuild Guide (Step-by-Step)</h2>
+
+    <p>If you need to rebuild this app from scratch (or build a similar one), follow this sequence:</p>
+
+    <h3>Phase 1: Foundation (Day 1)</h3>
+    <ol>
+        <li><strong>Create <code>index.html</code></strong> with doctype, meta viewport, and an empty <code>&lt;style&gt;</code> + <code>&lt;script&gt;</code> block.</li>
+        <li><strong>Define CSS custom properties</strong> in <code>:root</code>. Choose your color palette first &mdash; it affects everything. Use a medical blue (#4A6FA5 family) for healthcare trust.</li>
+        <li><strong>Build the data layer</strong>: write <code>getData()</code>, <code>saveData()</code>, <code>getDateKey()</code>. Define your JSON schema (entries keyed by date, each entry as an object with an <code>id</code> timestamp).</li>
+        <li><strong>Build the card CSS pattern</strong>: a white card with border, radius, shadow, and padding. You'll reuse this for every section.</li>
+    </ol>
+
+    <h3>Phase 2: Core CRUD (Day 1-2)</h3>
+    <ol>
+        <li><strong>Build the food entry form</strong>: inputs for name, meal type, calories, carbs, sugar, fiber, protein, portion, notes.</li>
+        <li><strong>Implement <code>addFoodEntry()</code></strong>: read form values, build entry object, push to date array, save, clear form.</li>
+        <li><strong>Implement <code>renderFoodLog()</code></strong>: group entries by meal type, build HTML string with meal group headers + entry rows. Handle empty state.</li>
+        <li><strong>Implement <code>deleteEntry(id)</code></strong>: filter array, re-save, re-render.</li>
+        <li><strong>Add the daily summary</strong>: reduce entries to totals (cal, carbs, sugar, fiber), update DOM elements.</li>
+    </ol>
+
+    <h3>Phase 3: Glucose Tracking (Day 2)</h3>
+    <ol>
+        <li><strong>Add glucose input section</strong>: mg/dL number input + context dropdown (fasting, before meal, etc.).</li>
+        <li><strong>Implement <code>logGlucose()</code></strong>: same pattern as food entries but in the <code>glucose</code> namespace.</li>
+        <li><strong>Implement <code>getGlucoseStatus()</code></strong>: return label + CSS class based on clinical thresholds.</li>
+        <li><strong>Render glucose readings</strong> with color-coded badges.</li>
+    </ol>
+
+    <h3>Phase 4: Date Navigation (Day 2)</h3>
+    <ol>
+        <li><strong>Add date input</strong> (<code>&lt;input type="date"&gt;</code>) and prev/next buttons.</li>
+        <li><strong>Implement <code>changeDate(delta)</code></strong>: adjust date by +/- 1 day, update input value, call <code>loadDate()</code>.</li>
+        <li><strong>Implement <code>loadDate()</code></strong>: calls all three render functions (food log, glucose log, summary).</li>
+    </ol>
+
+    <h3>Phase 5: Export Features (Day 3)</h3>
+    <ol>
+        <li><strong>Build modal system</strong>: overlay + centered box + sticky header/footer.</li>
+        <li><strong>Implement share</strong>: format current day as plain text, show in modal, copy to clipboard.</li>
+        <li><strong>Implement report generator</strong>: iterate date range, aggregate statistics, format as medical report, add email button with <code>mailto:</code>.</li>
+    </ol>
+
+    <h3>Phase 6: Education Content (Day 3)</h3>
+    <ol>
+        <li><strong>Build tabbed panel</strong>: horizontal scrollable tab bar + content sections toggled by class.</li>
+        <li><strong>Add 7 education sections</strong> based on ADA guidelines, covering foods, timing, glucose monitoring, women's health.</li>
+    </ol>
+
+    <h3>Phase 7: Polish (Day 4)</h3>
+    <ol>
+        <li><strong>Quick-add buttons</strong>: common foods with pre-filled macro values.</li>
+        <li><strong>Toast notification system</strong>: fixed-position element, show/hide with CSS transition.</li>
+        <li><strong>Color-coded warnings</strong>: carb/sugar thresholds on daily summary.</li>
+        <li><strong>Responsive breakpoint</strong>: adjust grid and hide button text on small screens.</li>
+        <li><strong>Print styles</strong>: hide interactive elements for printing.</li>
+        <li><strong>XSS protection</strong>: escape all user-generated text before innerHTML.</li>
+    </ol>
+
+    <h3>Phase 8: Deploy (Day 4)</h3>
+    <ol>
+        <li><strong>Create <code>.github/workflows/deploy.yml</code></strong> with the Pages deployment workflow.</li>
+        <li><strong>Enable GitHub Pages</strong> in repository settings (Source: GitHub Actions).</li>
+        <li><strong>Push to main</strong>: workflow deploys automatically.</li>
+    </ol>
+</div>
+
+<!-- 13. EXTENDING -->
+<div class="section" id="extending">
+    <h2>13. Extending the App</h2>
+
+    <h3>Possible Enhancements (Ordered by Complexity)</h3>
+
+    <table>
+        <tr><th>Feature</th><th>Effort</th><th>Approach</th></tr>
+        <tr>
+            <td>Custom quick-add foods</td>
+            <td>Small</td>
+            <td>Add a "Save as Quick Add" button on entries. Store in <code>settings.customFoods[]</code>. Render as additional quick-add buttons.</td>
+        </tr>
+        <tr>
+            <td>Food search / nutritional database</td>
+            <td>Medium</td>
+            <td>Integrate USDA FoodData Central API (<code>api.nal.usda.gov</code>). Add search-as-you-type to the food name input. Auto-fill macros from API response.</td>
+        </tr>
+        <tr>
+            <td>Data export (CSV/JSON)</td>
+            <td>Small</td>
+            <td>Serialize <code>getData()</code> to JSON or build CSV string. Trigger download via <code>Blob</code> + <code>URL.createObjectURL</code>.</td>
+        </tr>
+        <tr>
+            <td>Data import / backup</td>
+            <td>Small</td>
+            <td>File input that reads JSON, validates schema, merges into existing data via <code>saveData()</code>.</td>
+        </tr>
+        <tr>
+            <td>Glucose chart / graph</td>
+            <td>Medium</td>
+            <td>Use Chart.js (CDN) or a vanilla Canvas/SVG implementation. Plot glucose readings over time with target range bands.</td>
+        </tr>
+        <tr>
+            <td>PWA (installable app)</td>
+            <td>Medium</td>
+            <td>Add a <code>manifest.json</code> + service worker for offline caching. Enables "Add to Home Screen" on mobile.</td>
+        </tr>
+        <tr>
+            <td>Multi-device sync</td>
+            <td>Large</td>
+            <td>Requires a backend. Options: Firebase Realtime DB, Supabase, or a custom API. Would need user authentication.</td>
+        </tr>
+        <tr>
+            <td>Medication tracking</td>
+            <td>Medium</td>
+            <td>Add a third data namespace (<code>medications</code>). Similar CRUD pattern to food entries. Include in reports.</td>
+        </tr>
+        <tr>
+            <td>Menstrual cycle tracking</td>
+            <td>Medium</td>
+            <td>Add cycle day input to the daily view. Store in a <code>cycle</code> namespace. Overlay on glucose trends to visualize hormonal effects.</td>
+        </tr>
+    </table>
+
+    <h3>Adding a New Data Type (Pattern)</h3>
+    <p>To add any new trackable item (e.g., medications, exercise, mood), follow this consistent pattern:</p>
+
+    <pre>// 1. Add a new namespace to the data schema
+// In getData() default: { entries: {}, glucose: {}, medications: {}, settings: {} }
+
+// 2. Create the input form (HTML)
+// Follow the existing card + form-row + field pattern
+
+// 3. Create the CRUD functions (JS)
+function logMedication() {
+    const entry = { id: Date.now(), name: '...', dose: '...', time: '...' };
+    const data = getData();
+    const dk = getCurrentDateKey();
+    if (!data.medications[dk]) data.medications[dk] = [];
+    data.medications[dk].push(entry);
+    saveData(data);
+    loadDate();  // Re-render everything
+}
+
+// 4. Create the render function
+function renderMedicationLog() {
+    const data = getData();
+    const meds = data.medications[getCurrentDateKey()] || [];
+    // Build HTML string, set innerHTML
+}
+
+// 5. Add renderMedicationLog() to loadDate()
+function loadDate() {
+    renderFoodLog();
+    renderGlucoseLog();
+    renderMedicationLog();  // &lt;-- add here
+    updateDailySummary();
+}
+
+// 6. Include in report generation (aggregate + format)</pre>
+
+    <div class="highlight green">
+        <strong>The pattern is always the same:</strong> date-keyed object &rarr; array of timestamped entries &rarr; CRUD functions &rarr; render function &rarr; hook into <code>loadDate()</code>. This consistency is the app's main architectural strength.
+    </div>
+</div>
+
+<!-- Footer -->
+<div class="section" style="text-align:center; padding: 20px; background: var(--primary-light);">
+    <p style="font-size: 13px; color: var(--text-light); margin: 0;">
+        GlucoLog Architecture Documentation<br>
+        <a href="index.html" style="color: var(--primary);">Back to App</a>
+    </p>
+</div>
+
+</main>
+</div>
+
+</body>
+</html>
