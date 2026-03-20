@@ -1,0 +1,1947 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GlucoLog - Diabetes Food Tracker</title>
+    <style>
+        :root {
+            --primary: #4A6FA5;
+            --primary-dark: #3A5A8C;
+            --primary-light: #E8EEF6;
+            --accent: #6B9AC4;
+            --success: #4CAF50;
+            --warning: #FF9800;
+            --danger: #E53935;
+            --bg: #F5F7FA;
+            --card: #FFFFFF;
+            --text: #2D3748;
+            --text-light: #718096;
+            --border: #E2E8F0;
+            --shadow: 0 2px 8px rgba(0,0,0,0.08);
+            --radius: 12px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            padding: 16px 20px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 12px rgba(74,111,165,0.3);
+        }
+
+        .header-inner {
+            max-width: 600px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo-icon {
+            width: 36px;
+            height: 36px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .logo h1 {
+            font-size: 20px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        .logo span {
+            font-size: 11px;
+            opacity: 0.85;
+            display: block;
+            font-weight: 400;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .header-btn {
+            background: rgba(255,255,255,0.15);
+            border: 1px solid rgba(255,255,255,0.25);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .header-btn:hover {
+            background: rgba(255,255,255,0.25);
+        }
+
+        /* Main */
+        .main {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 16px;
+        }
+
+        /* Daily Summary Bar */
+        .daily-summary {
+            background: var(--card);
+            border-radius: var(--radius);
+            padding: 16px;
+            margin-bottom: 16px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+        }
+
+        .daily-summary h3 {
+            font-size: 13px;
+            color: var(--text-light);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 12px;
+        }
+
+        .macro-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+        }
+
+        .macro-item {
+            text-align: center;
+            padding: 10px 4px;
+            background: var(--primary-light);
+            border-radius: 10px;
+        }
+
+        .macro-value {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .macro-label {
+            font-size: 11px;
+            color: var(--text-light);
+            margin-top: 2px;
+        }
+
+        .macro-item.warning .macro-value { color: var(--warning); }
+        .macro-item.warning { background: #FFF3E0; }
+        .macro-item.danger .macro-value { color: var(--danger); }
+        .macro-item.danger { background: #FFEBEE; }
+
+        /* Glucose Reading Section */
+        .glucose-section {
+            background: var(--card);
+            border-radius: var(--radius);
+            padding: 16px;
+            margin-bottom: 16px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+        }
+
+        .glucose-section h3 {
+            font-size: 13px;
+            color: var(--text-light);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 12px;
+        }
+
+        .glucose-input-row {
+            display: flex;
+            gap: 10px;
+            align-items: flex-end;
+        }
+
+        .glucose-input-row .field { flex: 1; }
+
+        .glucose-input-row select,
+        .glucose-input-row input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 14px;
+            background: var(--bg);
+        }
+
+        .glucose-input-row label {
+            font-size: 12px;
+            color: var(--text-light);
+            margin-bottom: 4px;
+            display: block;
+        }
+
+        .glucose-badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-top: 8px;
+        }
+
+        .glucose-badge.normal { background: #E8F5E9; color: #2E7D32; }
+        .glucose-badge.elevated { background: #FFF3E0; color: #E65100; }
+        .glucose-badge.high { background: #FFEBEE; color: #C62828; }
+
+        /* Food Entry Form */
+        .entry-form {
+            background: var(--card);
+            border-radius: var(--radius);
+            padding: 20px;
+            margin-bottom: 16px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+        }
+
+        .entry-form h3 {
+            font-size: 13px;
+            color: var(--text-light);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 16px;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .form-row .field { flex: 1; }
+
+        .field label {
+            display: block;
+            font-size: 12px;
+            color: var(--text-light);
+            margin-bottom: 4px;
+            font-weight: 500;
+        }
+
+        .field input, .field select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 14px;
+            background: var(--bg);
+            color: var(--text);
+            transition: border-color 0.2s;
+        }
+
+        .field input:focus, .field select:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(107,154,196,0.15);
+        }
+
+        .quick-foods {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 14px;
+        }
+
+        .quick-food-btn {
+            padding: 6px 12px;
+            border: 1px solid var(--border);
+            background: var(--bg);
+            border-radius: 20px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: var(--text);
+        }
+
+        .quick-food-btn:hover {
+            background: var(--primary-light);
+            border-color: var(--accent);
+        }
+
+        .btn-primary {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(74,111,165,0.3);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        /* Food Log */
+        .food-log {
+            margin-bottom: 16px;
+        }
+
+        .food-log h3 {
+            font-size: 13px;
+            color: var(--text-light);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 12px;
+            padding: 0 4px;
+        }
+
+        .meal-group {
+            background: var(--card);
+            border-radius: var(--radius);
+            margin-bottom: 12px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+            overflow: hidden;
+        }
+
+        .meal-group-header {
+            padding: 12px 16px;
+            background: var(--primary-light);
+            font-weight: 600;
+            font-size: 14px;
+            color: var(--primary-dark);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .meal-group-header .carb-total {
+            font-size: 12px;
+            background: var(--primary);
+            color: white;
+            padding: 2px 10px;
+            border-radius: 12px;
+        }
+
+        .food-item {
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background 0.15s;
+        }
+
+        .food-item:last-child { border-bottom: none; }
+        .food-item:hover { background: #FAFBFC; }
+
+        .food-info { flex: 1; }
+
+        .food-name {
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        .food-meta {
+            font-size: 12px;
+            color: var(--text-light);
+            margin-top: 2px;
+        }
+
+        .food-macros {
+            display: flex;
+            gap: 12px;
+            font-size: 12px;
+            color: var(--text-light);
+            text-align: right;
+        }
+
+        .food-macros strong {
+            display: block;
+            font-size: 14px;
+            color: var(--text);
+        }
+
+        .food-actions {
+            margin-left: 10px;
+        }
+
+        .delete-btn {
+            background: none;
+            border: none;
+            color: var(--text-light);
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 16px;
+            transition: all 0.2s;
+        }
+
+        .delete-btn:hover {
+            background: #FFEBEE;
+            color: var(--danger);
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-light);
+        }
+
+        .empty-state .icon { font-size: 40px; margin-bottom: 12px; }
+        .empty-state p { font-size: 14px; }
+
+        /* Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 200;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal-overlay.active { display: flex; }
+
+        .modal {
+            background: var(--card);
+            border-radius: 16px;
+            width: 100%;
+            max-width: 540px;
+            max-height: 85vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+        }
+
+        .modal-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            background: var(--card);
+            z-index: 1;
+        }
+
+        .modal-header h2 {
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: var(--text-light);
+            padding: 4px;
+        }
+
+        .modal-body { padding: 24px; }
+
+        .report-content {
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            line-height: 1.7;
+            background: #F8FAFC;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            color: var(--text);
+        }
+
+        .modal-actions {
+            padding: 16px 24px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            position: sticky;
+            bottom: 0;
+            background: var(--card);
+        }
+
+        .btn-secondary {
+            padding: 10px 20px;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            color: var(--text);
+            font-weight: 500;
+        }
+
+        .btn-copy {
+            padding: 10px 20px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .btn-copy:hover { background: var(--primary-dark); }
+
+        .btn-email {
+            padding: 10px 20px;
+            background: var(--success);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(80px);
+            background: #333;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 500;
+            z-index: 300;
+            transition: transform 0.3s ease;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+
+        .toast.show { transform: translateX(-50%) translateY(0); }
+
+        /* Date Picker */
+        .date-nav {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .date-nav button {
+            background: var(--card);
+            border: 1px solid var(--border);
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text);
+        }
+
+        .date-nav button:hover { background: var(--primary-light); }
+
+        .date-nav input[type="date"] {
+            padding: 8px 14px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text);
+            background: var(--card);
+        }
+
+        /* Glucose Log */
+        .glucose-log-item {
+            padding: 10px 16px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 13px;
+        }
+
+        .glucose-log-item:last-child { border-bottom: none; }
+
+        /* Notes */
+        .field textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 14px;
+            background: var(--bg);
+            color: var(--text);
+            font-family: inherit;
+            resize: vertical;
+            min-height: 60px;
+        }
+
+        .field textarea:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(107,154,196,0.15);
+        }
+
+        /* Responsive */
+        @media (max-width: 480px) {
+            .macro-grid { grid-template-columns: repeat(2, 1fr); }
+            .header-btn span.btn-text { display: none; }
+            .glucose-input-row { flex-wrap: wrap; }
+            .glucose-input-row .field { min-width: calc(50% - 5px); }
+        }
+
+        /* Tips Panel */
+        .tips-panel {
+            display: none;
+            background: var(--card);
+            border-radius: var(--radius);
+            margin-bottom: 16px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+            overflow: hidden;
+        }
+
+        .tips-panel.active { display: block; }
+
+        .tips-panel-header {
+            padding: 16px 20px;
+            background: linear-gradient(135deg, #2E7D32 0%, #1B5E20 100%);
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .tips-panel-header h2 {
+            font-size: 17px;
+            font-weight: 700;
+        }
+
+        .tips-close {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 18px;
+        }
+
+        .tips-nav {
+            display: flex;
+            overflow-x: auto;
+            border-bottom: 1px solid var(--border);
+            background: #F0F4F0;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .tips-nav::-webkit-scrollbar { display: none; }
+
+        .tips-tab {
+            padding: 10px 16px;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-light);
+            border: none;
+            background: none;
+            cursor: pointer;
+            white-space: nowrap;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .tips-tab:hover { color: var(--text); }
+
+        .tips-tab.active {
+            color: #2E7D32;
+            border-bottom-color: #2E7D32;
+            background: white;
+        }
+
+        .tips-content { padding: 20px; }
+
+        .tip-section { display: none; }
+        .tip-section.active { display: block; }
+
+        .tip-section h3 {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 12px;
+        }
+
+        .tip-section h4 {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--primary-dark);
+            margin: 16px 0 8px 0;
+        }
+
+        .tip-section p {
+            font-size: 13px;
+            color: var(--text);
+            margin-bottom: 10px;
+            line-height: 1.7;
+        }
+
+        .tip-section ul {
+            padding-left: 18px;
+            margin-bottom: 12px;
+        }
+
+        .tip-section li {
+            font-size: 13px;
+            color: var(--text);
+            margin-bottom: 6px;
+            line-height: 1.6;
+        }
+
+        .tip-section li strong { color: var(--primary-dark); }
+
+        .tip-card {
+            background: #F0F7F0;
+            border: 1px solid #C8E6C9;
+            border-radius: 10px;
+            padding: 14px 16px;
+            margin-bottom: 10px;
+        }
+
+        .tip-card.warning-card {
+            background: #FFF8E1;
+            border-color: #FFE082;
+        }
+
+        .tip-card.info-card {
+            background: var(--primary-light);
+            border-color: #B3CDE0;
+        }
+
+        .tip-card.pink-card {
+            background: #FCE4EC;
+            border-color: #F8BBD0;
+        }
+
+        .tip-card h5 {
+            font-size: 13px;
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+
+        .tip-card p, .tip-card li { font-size: 12px; }
+
+        .plate-method {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin: 12px 0;
+        }
+
+        .plate-section {
+            text-align: center;
+            padding: 14px 8px;
+            border-radius: 10px;
+            font-size: 12px;
+        }
+
+        .plate-section.veggies { background: #E8F5E9; border: 1px solid #A5D6A7; }
+        .plate-section.protein { background: #E3F2FD; border: 1px solid #90CAF9; }
+        .plate-section.carbs { background: #FFF3E0; border: 1px solid #FFCC80; }
+
+        .plate-section strong {
+            display: block;
+            font-size: 20px;
+            margin-bottom: 4px;
+        }
+
+        .glucose-target-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+            margin: 12px 0;
+        }
+
+        .glucose-target-table th,
+        .glucose-target-table td {
+            padding: 8px 10px;
+            border: 1px solid var(--border);
+            text-align: left;
+        }
+
+        .glucose-target-table th {
+            background: var(--primary-light);
+            font-weight: 600;
+            font-size: 11px;
+            text-transform: uppercase;
+        }
+
+        .daily-habits {
+            counter-reset: habit;
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .daily-habits li {
+            counter-increment: habit;
+            padding: 10px 10px 10px 40px;
+            position: relative;
+            background: var(--bg);
+            border-radius: 8px;
+            margin-bottom: 6px;
+        }
+
+        .daily-habits li::before {
+            content: counter(habit);
+            position: absolute;
+            left: 10px;
+            top: 10px;
+            width: 22px;
+            height: 22px;
+            background: var(--primary);
+            color: white;
+            border-radius: 50%;
+            font-size: 11px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Print Styles */
+        @media print {
+            .header, .entry-form, .glucose-section, .date-nav,
+            .food-actions, .delete-btn { display: none !important; }
+            .main { max-width: 100%; padding: 0; }
+            body { background: white; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- Header -->
+<header class="header">
+    <div class="header-inner">
+        <div class="logo">
+            <div class="logo-icon">&#9764;</div>
+            <div>
+                <h1>GlucoLog</h1>
+                <span>Diabetes Nutrition Tracker</span>
+            </div>
+        </div>
+        <div class="header-actions">
+            <button class="header-btn" onclick="toggleTips()" title="Nutrition guide & tips">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a7 7 0 017 7c0 2.38-1.19 4.47-3 5.74V17a2 2 0 01-2 2h-4a2 2 0 01-2-2v-2.26C6.19 13.47 5 11.38 5 9a7 7 0 017-7z"/><line x1="10" y1="22" x2="14" y2="22"/></svg>
+                <span class="btn-text">Tips</span>
+            </button>
+            <button class="header-btn" onclick="openShareModal()" title="Share today's log">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+                <span class="btn-text">Share</span>
+            </button>
+            <button class="header-btn" onclick="openReportModal()" title="Generate doctor report">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                <span class="btn-text">Report</span>
+            </button>
+        </div>
+    </div>
+</header>
+
+<main class="main">
+
+    <!-- Date Navigation -->
+    <div class="date-nav">
+        <button onclick="changeDate(-1)" title="Previous day">&#8249;</button>
+        <input type="date" id="currentDate" onchange="loadDate()">
+        <button onclick="changeDate(1)" title="Next day">&#8250;</button>
+    </div>
+
+    <!-- Daily Summary -->
+    <div class="daily-summary">
+        <h3>Daily Totals</h3>
+        <div class="macro-grid">
+            <div class="macro-item" id="totalCalBox">
+                <div class="macro-value" id="totalCal">0</div>
+                <div class="macro-label">Calories</div>
+            </div>
+            <div class="macro-item" id="totalCarbBox">
+                <div class="macro-value" id="totalCarb">0g</div>
+                <div class="macro-label">Carbs</div>
+            </div>
+            <div class="macro-item" id="totalSugarBox">
+                <div class="macro-value" id="totalSugar">0g</div>
+                <div class="macro-label">Sugar</div>
+            </div>
+            <div class="macro-item" id="totalFiberBox">
+                <div class="macro-value" id="totalFiber">0g</div>
+                <div class="macro-label">Fiber</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Glucose Section -->
+    <div class="glucose-section">
+        <h3>Blood Glucose Reading</h3>
+        <div class="glucose-input-row">
+            <div class="field">
+                <label for="glucoseValue">mg/dL</label>
+                <input type="number" id="glucoseValue" placeholder="e.g. 120" min="30" max="600">
+            </div>
+            <div class="field">
+                <label for="glucoseContext">Context</label>
+                <select id="glucoseContext">
+                    <option value="fasting">Fasting</option>
+                    <option value="before-meal">Before Meal</option>
+                    <option value="after-meal-1h">1hr After Meal</option>
+                    <option value="after-meal-2h">2hr After Meal</option>
+                    <option value="bedtime">Bedtime</option>
+                </select>
+            </div>
+            <div class="field">
+                <button class="btn-primary" style="width:auto; padding:10px 18px; margin-top:18px;" onclick="logGlucose()">Log</button>
+            </div>
+        </div>
+        <div id="glucoseLog"></div>
+    </div>
+
+    <!-- Food Entry Form -->
+    <div class="entry-form">
+        <h3>Log Food</h3>
+
+        <div class="quick-foods" id="quickFoods">
+            <button class="quick-food-btn" onclick="quickAdd('Oatmeal (1 cup)', 'Breakfast', 150, 27, 1, 4, 5)">Oatmeal</button>
+            <button class="quick-food-btn" onclick="quickAdd('Scrambled Eggs (2)', 'Breakfast', 182, 2, 1, 0, 12)">Eggs (2)</button>
+            <button class="quick-food-btn" onclick="quickAdd('Whole Wheat Toast', 'Breakfast', 70, 12, 1.5, 2, 3)">WW Toast</button>
+            <button class="quick-food-btn" onclick="quickAdd('Apple (medium)', 'Snack', 95, 25, 19, 4.4, 0.5)">Apple</button>
+            <button class="quick-food-btn" onclick="quickAdd('Greek Yogurt (plain)', 'Snack', 100, 6, 4, 0, 17)">Greek Yogurt</button>
+            <button class="quick-food-btn" onclick="quickAdd('Grilled Chicken Breast', 'Lunch', 165, 0, 0, 0, 31)">Chicken</button>
+            <button class="quick-food-btn" onclick="quickAdd('Brown Rice (1 cup)', 'Lunch', 216, 45, 0.7, 3.5, 5)">Brown Rice</button>
+            <button class="quick-food-btn" onclick="quickAdd('Mixed Salad', 'Lunch', 45, 8, 3, 3, 2)">Salad</button>
+            <button class="quick-food-btn" onclick="quickAdd('Almonds (1 oz)', 'Snack', 164, 6, 1, 3.5, 6)">Almonds</button>
+            <button class="quick-food-btn" onclick="quickAdd('Salmon Fillet', 'Dinner', 208, 0, 0, 0, 20)">Salmon</button>
+            <button class="quick-food-btn" onclick="quickAdd('Water (8 oz)', 'Snack', 0, 0, 0, 0, 0)">Water</button>
+        </div>
+
+        <div class="form-row">
+            <div class="field" style="flex:2">
+                <label for="foodName">Food Item</label>
+                <input type="text" id="foodName" placeholder="e.g. Grilled chicken breast">
+            </div>
+            <div class="field">
+                <label for="mealType">Meal</label>
+                <select id="mealType">
+                    <option value="Breakfast">Breakfast</option>
+                    <option value="Lunch">Lunch</option>
+                    <option value="Dinner">Dinner</option>
+                    <option value="Snack">Snack</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="field">
+                <label for="calories">Calories</label>
+                <input type="number" id="calories" placeholder="0" min="0">
+            </div>
+            <div class="field">
+                <label for="carbs">Carbs (g)</label>
+                <input type="number" id="carbs" placeholder="0" min="0" step="0.1">
+            </div>
+            <div class="field">
+                <label for="sugar">Sugar (g)</label>
+                <input type="number" id="sugar" placeholder="0" min="0" step="0.1">
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="field">
+                <label for="fiber">Fiber (g)</label>
+                <input type="number" id="fiber" placeholder="0" min="0" step="0.1">
+            </div>
+            <div class="field">
+                <label for="protein">Protein (g)</label>
+                <input type="number" id="protein" placeholder="0" min="0" step="0.1">
+            </div>
+            <div class="field">
+                <label for="portionSize">Portion</label>
+                <input type="text" id="portionSize" placeholder="e.g. 1 cup">
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="field">
+                <label for="foodNotes">Notes (optional)</label>
+                <textarea id="foodNotes" rows="2" placeholder="e.g. felt a spike after this meal, used sugar substitute"></textarea>
+            </div>
+        </div>
+
+        <button class="btn-primary" onclick="addFoodEntry()">+ Add Food Entry</button>
+    </div>
+
+    <!-- Nutrition Tips Panel -->
+    <div class="tips-panel" id="tipsPanel">
+        <div class="tips-panel-header">
+            <h2>Diabetes Nutrition Guide</h2>
+            <button class="tips-close" onclick="toggleTips()">&times;</button>
+        </div>
+        <div class="tips-nav">
+            <button class="tips-tab active" onclick="showTipTab('best-foods', this)">Best Foods</button>
+            <button class="tips-tab" onclick="showTipTab('avoid', this)">Limit / Avoid</button>
+            <button class="tips-tab" onclick="showTipTab('timing', this)">Meal Timing</button>
+            <button class="tips-tab" onclick="showTipTab('glucose-tips', this)">Glucose</button>
+            <button class="tips-tab" onclick="showTipTab('tracking', this)">Tracking</button>
+            <button class="tips-tab" onclick="showTipTab('women', this)">Women's Health</button>
+            <button class="tips-tab" onclick="showTipTab('habits', this)">Daily Habits</button>
+        </div>
+        <div class="tips-content">
+
+            <!-- Best Foods -->
+            <div class="tip-section active" id="tip-best-foods">
+                <h3>What to Eat</h3>
+
+                <div class="tip-card info-card">
+                    <h5>The Diabetes Plate Method (ADA Recommended)</h5>
+                </div>
+                <div class="plate-method">
+                    <div class="plate-section veggies">
+                        <strong>&frac12;</strong>
+                        Non-Starchy Vegetables
+                    </div>
+                    <div class="plate-section protein">
+                        <strong>&frac14;</strong>
+                        Lean Protein
+                    </div>
+                    <div class="plate-section carbs">
+                        <strong>&frac14;</strong>
+                        Quality Carbs
+                    </div>
+                </div>
+
+                <h4>Low Glycemic Index Staples</h4>
+                <ul>
+                    <li><strong>Non-starchy vegetables:</strong> broccoli, spinach, kale, peppers, zucchini, cauliflower, green beans &mdash; fill half your plate.</li>
+                    <li><strong>Whole intact grains:</strong> steel-cut oats, quinoa, barley, bulgur, farro &mdash; digest slowly, smaller blood sugar spikes.</li>
+                    <li><strong>Legumes:</strong> lentils, chickpeas, black beans, kidney beans &mdash; high fiber and protein, GI under 40.</li>
+                    <li><strong>Lean proteins:</strong> skinless poultry, fish (salmon, sardines, mackerel for omega-3s), eggs, tofu.</li>
+                    <li><strong>Healthy fats:</strong> avocado, olive oil, nuts (almonds, walnuts, pistachios), seeds (chia, flax).</li>
+                    <li><strong>Low-GI fruits:</strong> berries, cherries, apples, pears, citrus &mdash; eat whole, not juiced.</li>
+                    <li><strong>Dairy:</strong> plain Greek yogurt, cottage cheese, unsweetened almond/soy milk.</li>
+                </ul>
+
+                <div class="tip-card">
+                    <h5>Blood Sugar Stabilizers</h5>
+                    <ul>
+                        <li><strong>Fiber:</strong> Aim for 25&ndash;30g/day. Soluble fiber (oats, beans, flaxseed) slows glucose absorption.</li>
+                        <li><strong>Vinegar:</strong> 1&ndash;2 tbsp apple cider vinegar before a meal may blunt post-meal spikes.</li>
+                        <li><strong>Cinnamon:</strong> &frac12; to 1 tsp daily may modestly lower blood sugar.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Limit / Avoid -->
+            <div class="tip-section" id="tip-avoid">
+                <h3>What to Limit or Avoid</h3>
+
+                <div class="tip-card warning-card">
+                    <h5>Fastest Blood Sugar Spikers</h5>
+                    <ul>
+                        <li><strong>Sugary beverages:</strong> soda, fruit juice, sweetened coffee, energy drinks</li>
+                        <li><strong>White refined carbs:</strong> white bread, white rice, regular pasta, pastries, bagels</li>
+                        <li><strong>Most commercial cereals:</strong> high GI even when marketed as "healthy"</li>
+                        <li><strong>Sweets/desserts:</strong> if consuming, keep portions very small and pair with protein or fat</li>
+                    </ul>
+                </div>
+
+                <h4>Hidden Sugar Sources</h4>
+                <ul>
+                    <li>Flavored yogurts (can contain 20&ndash;30g sugar per serving)</li>
+                    <li>Granola and granola bars</li>
+                    <li>Condiments: ketchup, barbecue sauce, teriyaki, salad dressings</li>
+                    <li>"Fat-free" packaged foods (often compensate with added sugar)</li>
+                    <li>Dried fruit (concentrated sugar, easy to overeat)</li>
+                    <li>Smoothies and acai bowls (often 50&ndash;80g of sugar)</li>
+                </ul>
+
+                <h4>Also Limit</h4>
+                <ul>
+                    <li><strong>Saturated/trans fats:</strong> fried foods, processed meats &mdash; women with diabetes face elevated cardiovascular risk.</li>
+                    <li><strong>Sodium:</strong> aim for under 2,300 mg/day.</li>
+                    <li><strong>Alcohol:</strong> lowers blood sugar unpredictably. If drinking, limit to 1/day with food. Avoid sweet cocktails.</li>
+                </ul>
+            </div>
+
+            <!-- Meal Timing -->
+            <div class="tip-section" id="tip-timing">
+                <h3>Meal Timing &amp; Portion Control</h3>
+
+                <h4>Timing Strategies</h4>
+                <ul>
+                    <li><strong>Eat at consistent times each day.</strong> Blood sugar management improves with a regular schedule.</li>
+                    <li><strong>Do not skip breakfast.</strong> A protein-rich breakfast (eggs, Greek yogurt, nuts) is better than carb-heavy.</li>
+                    <li><strong>Space meals 4&ndash;5 hours apart</strong> with small snacks in between if needed.</li>
+                    <li><strong>Stop eating 2&ndash;3 hours before bed.</strong> Late-night eating raises fasting glucose.</li>
+                </ul>
+
+                <div class="tip-card">
+                    <h5>Eat Carbs Last</h5>
+                    <p>Research shows eating vegetables and protein <strong>before</strong> carbohydrates can reduce post-meal glucose spikes by up to 30&ndash;40%.</p>
+                </div>
+
+                <h4>Carb Counting Basics</h4>
+                <ul>
+                    <li>One "carb serving" = <strong>15 grams</strong> of carbohydrate.</li>
+                    <li>Most women do well with <strong>30&ndash;45g carbs per meal</strong> and <strong>15&ndash;20g per snack</strong>. Set your target with your care team.</li>
+                    <li>~15g carb examples: 1 slice bread, &frac13; cup rice, 1 small apple, &frac12; cup oatmeal, &frac34; cup blueberries.</li>
+                    <li><strong>Read nutrition labels.</strong> Focus on "Total Carbohydrate" and check serving size.</li>
+                    <li>Subtract fiber from total carbs for "net carbs" &mdash; fiber does not raise blood sugar.</li>
+                </ul>
+
+                <h4>Portion Control Tips</h4>
+                <ul>
+                    <li>Use smaller plates (9-inch instead of 12-inch).</li>
+                    <li>A fist &asymp; 1 cup, a palm &asymp; 3 oz protein, a thumb &asymp; 1 tbsp fat.</li>
+                    <li>Pre-portion snacks into bags instead of eating from the container.</li>
+                </ul>
+            </div>
+
+            <!-- Glucose Tips -->
+            <div class="tip-section" id="tip-glucose-tips">
+                <h3>Blood Glucose Monitoring</h3>
+
+                <h4>When to Check</h4>
+                <ul>
+                    <li><strong>Fasting (morning):</strong> reflects overnight glucose management.</li>
+                    <li><strong>Before meals:</strong> establishes your baseline.</li>
+                    <li><strong>2 hours after first bite:</strong> shows how your body handled that meal &mdash; the most useful reading for learning.</li>
+                    <li><strong>Before bed:</strong> helps prevent overnight lows.</li>
+                    <li><strong>Before &amp; after exercise:</strong> prevents hypoglycemia.</li>
+                    <li><strong>When you feel "off":</strong> shaky, sweaty, dizzy, confused, unusually tired.</li>
+                </ul>
+
+                <h4>Target Ranges</h4>
+                <table class="glucose-target-table">
+                    <thead>
+                        <tr>
+                            <th>Timing</th>
+                            <th>Type 1 &amp; 2</th>
+                            <th>Gestational</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Fasting / Before meals</td>
+                            <td>80&ndash;130 mg/dL</td>
+                            <td>Under 95 mg/dL</td>
+                        </tr>
+                        <tr>
+                            <td>1 hour after eating</td>
+                            <td>&mdash;</td>
+                            <td>Under 140 mg/dL</td>
+                        </tr>
+                        <tr>
+                            <td>2 hours after eating</td>
+                            <td>Under 180 mg/dL</td>
+                            <td>Under 120 mg/dL</td>
+                        </tr>
+                        <tr>
+                            <td>A1C goal</td>
+                            <td>Under 7%</td>
+                            <td>&mdash;</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <p style="font-size:11px; color:var(--text-light); margin-top:4px;">Gestational targets are tighter because high blood sugar directly affects the developing baby. Always confirm with your provider.</p>
+
+                <div class="tip-card warning-card" style="margin-top:14px;">
+                    <h5>What Readings Mean</h5>
+                    <ul>
+                        <li><strong>Consistently high fasting:</strong> "dawn phenomenon," medication adjustment needed, or late-night eating.</li>
+                        <li><strong>High post-meal spikes:</strong> too many carbs, or carbs eaten without protein/fat/fiber.</li>
+                        <li><strong>Below 70 mg/dL:</strong> hypoglycemia &mdash; treat with 15g fast-acting carbs (4 glucose tablets, &frac12; cup juice), wait 15 min, recheck.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Tracking Tips -->
+            <div class="tip-section" id="tip-tracking">
+                <h3>Smart Tracking Habits</h3>
+
+                <h4>What to Log Daily</h4>
+                <ul>
+                    <li><strong>Blood sugar readings</strong> with timestamps.</li>
+                    <li><strong>All food and drink</strong> with portions and estimated carb counts.</li>
+                    <li><strong>Physical activity</strong> &mdash; type, duration, and intensity.</li>
+                    <li><strong>Medications/insulin</strong> &mdash; dosage and timing.</li>
+                    <li><strong>Sleep quality and duration</strong> &mdash; poor sleep raises blood sugar the next day.</li>
+                    <li><strong>Stress level</strong> (even 1&ndash;5 scale) &mdash; cortisol directly raises blood sugar.</li>
+                    <li><strong>Menstrual cycle day</strong> &mdash; critical for women (see Women's Health tab).</li>
+                </ul>
+
+                <div class="tip-card info-card">
+                    <h5>Patterns Matter More Than Single Readings</h5>
+                    <p>A single high reading is not a crisis. A <strong>pattern</strong> of high readings at the same time of day, after the same meal, or at the same point in your cycle is actionable information. Look at 7&ndash;14 day trends.</p>
+                </div>
+
+                <h4>How to Spot Trends</h4>
+                <ul>
+                    <li><strong>Review your log weekly.</strong> Look for patterns like: "Blood sugar always high Monday mornings" or "Pasta spikes me more than rice."</li>
+                    <li><strong>Pair food and glucose data.</strong> After 2 weeks, you'll clearly see which foods are your personal triggers.</li>
+                    <li><strong>Use the notes field</strong> to tag entries: "restaurant meal," "stressful day," "poor sleep," "period week."</li>
+                    <li><strong>Use the Doctor Report feature</strong> to share patterns with your provider at each visit.</li>
+                </ul>
+
+                <div class="tip-card">
+                    <h5>Remember</h5>
+                    <p>Tracking is a tool for <strong>learning</strong>, not a report card. The goal is curiosity, not judgment.</p>
+                </div>
+            </div>
+
+            <!-- Women's Health -->
+            <div class="tip-section" id="tip-women">
+                <h3>Special Considerations for Women</h3>
+
+                <div class="tip-card pink-card">
+                    <h5>Menstrual Cycle &amp; Blood Sugar</h5>
+                    <p>Many women experience <strong>higher blood sugar in the 3&ndash;7 days before their period</strong> (luteal phase) due to rising progesterone and estrogen. Blood sugar often drops when the period starts.</p>
+                    <p style="margin-top:6px;">Some women need 10&ndash;20% more insulin or stricter carb limits in the premenstrual week. Track your cycle day alongside glucose to see your personal pattern.</p>
+                </div>
+
+                <h4>Perimenopause &amp; Menopause</h4>
+                <p>Fluctuating and declining estrogen can make blood sugar less predictable. Weight may shift to the abdomen, increasing insulin resistance. Revisit your management plan with your care team during these transitions.</p>
+
+                <h4>Pregnancy &amp; Gestational Diabetes</h4>
+                <ul>
+                    <li>Gestational diabetes affects 6&ndash;9% of pregnancies, usually around weeks 24&ndash;28.</li>
+                    <li>Eat every 2&ndash;3 hours, never skip meals, pair carbs with protein at every eating occasion.</li>
+                    <li>Women with GDM have a <strong>50% lifetime risk</strong> of developing Type 2 diabetes later.</li>
+                    <li>Get screened at 6&ndash;12 weeks postpartum and every 1&ndash;3 years thereafter.</li>
+                    <li>Breastfeeding may improve insulin sensitivity and lower future diabetes risk.</li>
+                </ul>
+
+                <h4>PCOS Connection</h4>
+                <ul>
+                    <li>50&ndash;70% of women with PCOS have insulin resistance, regardless of weight.</li>
+                    <li>PCOS significantly increases risk of Type 2 and gestational diabetes.</li>
+                    <li>Focus: anti-inflammatory foods, consistent carb intake, 20&ndash;30g protein per meal, omega-3s.</li>
+                    <li>Even modest weight loss (5&ndash;7% body weight) meaningfully improves both conditions.</li>
+                </ul>
+
+                <div class="tip-card warning-card" style="margin-top:14px;">
+                    <h5>Other Important Notes</h5>
+                    <ul>
+                        <li><strong>UTIs and yeast infections</strong> are more common with poorly controlled diabetes. Good blood sugar control is the best prevention.</li>
+                        <li><strong>Heart disease:</strong> diabetes eliminates the cardiovascular protection premenopausal women typically have. Heart-healthy eating is essential.</li>
+                        <li><strong>Bone health (Type 1):</strong> ensure adequate calcium (1,000&ndash;1,200 mg/day) and vitamin D (600&ndash;800 IU/day).</li>
+                        <li><strong>Mental health:</strong> women with diabetes have higher rates of depression. If you're struggling, seek professional support &mdash; this is a medical issue, not a personal failure.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Daily Habits -->
+            <div class="tip-section" id="tip-habits">
+                <h3>10 Daily Habits That Make the Biggest Difference</h3>
+
+                <ol class="daily-habits">
+                    <li>Fill half your plate with non-starchy vegetables at every meal.</li>
+                    <li>Pair carbohydrates with protein or healthy fat &mdash; never eat carbs alone.</li>
+                    <li>Eat your vegetables and protein <strong>before</strong> your carbohydrates.</li>
+                    <li>Check blood sugar 2 hours after meals to learn which foods work for you.</li>
+                    <li>Drink water as your primary beverage.</li>
+                    <li>Move your body after meals &mdash; even a 10&ndash;15 minute walk significantly lowers post-meal glucose.</li>
+                    <li>Sleep 7&ndash;8 hours &mdash; even one night of poor sleep increases insulin resistance.</li>
+                    <li>Log your food, glucose, and cycle day &mdash; patterns only emerge when you track.</li>
+                    <li>Keep consistent meal times, especially breakfast.</li>
+                    <li>Be patient with yourself. Diabetes management is a daily practice, not a test you pass or fail.</li>
+                </ol>
+
+                <div class="tip-card" style="margin-top:16px;">
+                    <p style="font-size:11px; color:var(--text-light); margin:0;">Based on: American Diabetes Association Standards of Care, Diabetes Canada Clinical Practice Guidelines, ACOG guidelines on gestational diabetes, and peer-reviewed research on glycemic index, meal sequencing, and hormonal effects on glucose metabolism.</p>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Food Log -->
+    <div class="food-log">
+        <h3>Today's Food Log</h3>
+        <div id="foodLogEntries"></div>
+    </div>
+
+</main>
+
+<!-- Share Modal -->
+<div class="modal-overlay" id="shareModal">
+    <div class="modal">
+        <div class="modal-header">
+            <h2>Share Food Log</h2>
+            <button class="modal-close" onclick="closeModal('shareModal')">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div class="report-content" id="shareContent"></div>
+        </div>
+        <div class="modal-actions">
+            <button class="btn-secondary" onclick="closeModal('shareModal')">Close</button>
+            <button class="btn-copy" onclick="copyToClipboard('shareContent')">Copy to Clipboard</button>
+        </div>
+    </div>
+</div>
+
+<!-- Doctor Report Modal -->
+<div class="modal-overlay" id="reportModal">
+    <div class="modal">
+        <div class="modal-header">
+            <h2>Medical Summary Report</h2>
+            <button class="modal-close" onclick="closeModal('reportModal')">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div style="margin-bottom:16px;">
+                <div class="form-row">
+                    <div class="field">
+                        <label for="patientName">Patient Name</label>
+                        <input type="text" id="patientName" placeholder="Your full name">
+                    </div>
+                    <div class="field">
+                        <label for="doctorName">Doctor Name</label>
+                        <input type="text" id="doctorName" placeholder="Dr.">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="field">
+                        <label for="diabetesType">Diabetes Type</label>
+                        <select id="diabetesType">
+                            <option value="Type 1">Type 1</option>
+                            <option value="Type 2" selected>Type 2</option>
+                            <option value="Gestational">Gestational</option>
+                            <option value="Prediabetes">Prediabetes</option>
+                        </select>
+                    </div>
+                    <div class="field">
+                        <label for="reportDays">Report Period</label>
+                        <select id="reportDays">
+                            <option value="1">Today Only</option>
+                            <option value="3">Last 3 Days</option>
+                            <option value="7" selected>Last 7 Days</option>
+                            <option value="14">Last 14 Days</option>
+                            <option value="30">Last 30 Days</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="field">
+                        <label for="additionalNotes">Additional Notes for Doctor</label>
+                        <textarea id="additionalNotes" rows="2" placeholder="e.g. Changed medication last week, experiencing frequent lows"></textarea>
+                    </div>
+                </div>
+                <button class="btn-primary" onclick="generateReport()">Generate Report</button>
+            </div>
+            <div class="report-content" id="reportContent" style="display:none;"></div>
+        </div>
+        <div class="modal-actions" id="reportActions" style="display:none;">
+            <button class="btn-secondary" onclick="closeModal('reportModal')">Close</button>
+            <button class="btn-copy" onclick="copyToClipboard('reportContent')">Copy to Clipboard</button>
+            <button class="btn-email" onclick="emailReport()">Open in Email</button>
+        </div>
+    </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+    // ===================== DATA LAYER =====================
+    const STORAGE_KEY = 'glucolog_data';
+
+    function getData() {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        return raw ? JSON.parse(raw) : { entries: {}, glucose: {}, settings: {} };
+    }
+
+    function saveData(data) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    }
+
+    function getDateKey(date) {
+        return date.toISOString().split('T')[0];
+    }
+
+    function getCurrentDateKey() {
+        return document.getElementById('currentDate').value;
+    }
+
+    // ===================== INITIALIZATION =====================
+    function init() {
+        const today = new Date();
+        document.getElementById('currentDate').value = getDateKey(today);
+
+        // Load saved patient/doctor info
+        const data = getData();
+        if (data.settings.patientName) document.getElementById('patientName').value = data.settings.patientName;
+        if (data.settings.doctorName) document.getElementById('doctorName').value = data.settings.doctorName;
+        if (data.settings.diabetesType) document.getElementById('diabetesType').value = data.settings.diabetesType;
+
+        loadDate();
+    }
+
+    function changeDate(delta) {
+        const input = document.getElementById('currentDate');
+        const date = new Date(input.value + 'T12:00:00');
+        date.setDate(date.getDate() + delta);
+        input.value = getDateKey(date);
+        loadDate();
+    }
+
+    function loadDate() {
+        renderFoodLog();
+        renderGlucoseLog();
+        updateDailySummary();
+    }
+
+    // ===================== FOOD ENTRIES =====================
+    function addFoodEntry() {
+        const name = document.getElementById('foodName').value.trim();
+        if (!name) { showToast('Please enter a food name'); return; }
+
+        const entry = {
+            id: Date.now(),
+            name: name,
+            meal: document.getElementById('mealType').value,
+            calories: parseFloat(document.getElementById('calories').value) || 0,
+            carbs: parseFloat(document.getElementById('carbs').value) || 0,
+            sugar: parseFloat(document.getElementById('sugar').value) || 0,
+            fiber: parseFloat(document.getElementById('fiber').value) || 0,
+            protein: parseFloat(document.getElementById('protein').value) || 0,
+            portion: document.getElementById('portionSize').value.trim(),
+            notes: document.getElementById('foodNotes').value.trim(),
+            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        };
+
+        const dateKey = getCurrentDateKey();
+        const data = getData();
+        if (!data.entries[dateKey]) data.entries[dateKey] = [];
+        data.entries[dateKey].push(entry);
+        saveData(data);
+
+        // Reset form
+        document.getElementById('foodName').value = '';
+        document.getElementById('calories').value = '';
+        document.getElementById('carbs').value = '';
+        document.getElementById('sugar').value = '';
+        document.getElementById('fiber').value = '';
+        document.getElementById('protein').value = '';
+        document.getElementById('portionSize').value = '';
+        document.getElementById('foodNotes').value = '';
+
+        loadDate();
+        showToast('Food entry added');
+    }
+
+    function quickAdd(name, meal, cal, carbs, sugar, fiber, protein) {
+        document.getElementById('foodName').value = name;
+        document.getElementById('mealType').value = meal;
+        document.getElementById('calories').value = cal;
+        document.getElementById('carbs').value = carbs;
+        document.getElementById('sugar').value = sugar;
+        document.getElementById('fiber').value = fiber;
+        document.getElementById('protein').value = protein;
+        addFoodEntry();
+    }
+
+    function deleteEntry(id) {
+        const dateKey = getCurrentDateKey();
+        const data = getData();
+        if (data.entries[dateKey]) {
+            data.entries[dateKey] = data.entries[dateKey].filter(e => e.id !== id);
+            saveData(data);
+            loadDate();
+            showToast('Entry removed');
+        }
+    }
+
+    // ===================== GLUCOSE =====================
+    function logGlucose() {
+        const value = parseFloat(document.getElementById('glucoseValue').value);
+        if (!value || value < 30 || value > 600) {
+            showToast('Please enter a valid glucose reading (30-600 mg/dL)');
+            return;
+        }
+
+        const reading = {
+            id: Date.now(),
+            value: value,
+            context: document.getElementById('glucoseContext').value,
+            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        };
+
+        const dateKey = getCurrentDateKey();
+        const data = getData();
+        if (!data.glucose[dateKey]) data.glucose[dateKey] = [];
+        data.glucose[dateKey].push(reading);
+        saveData(data);
+
+        document.getElementById('glucoseValue').value = '';
+        loadDate();
+        showToast('Glucose reading logged');
+    }
+
+    function deleteGlucose(id) {
+        const dateKey = getCurrentDateKey();
+        const data = getData();
+        if (data.glucose[dateKey]) {
+            data.glucose[dateKey] = data.glucose[dateKey].filter(r => r.id !== id);
+            saveData(data);
+            loadDate();
+        }
+    }
+
+    function getGlucoseStatus(value) {
+        if (value < 70) return { label: 'Low', cls: 'high' };
+        if (value <= 100) return { label: 'Normal', cls: 'normal' };
+        if (value <= 140) return { label: 'Elevated', cls: 'elevated' };
+        return { label: 'High', cls: 'high' };
+    }
+
+    function getContextLabel(ctx) {
+        const map = {
+            'fasting': 'Fasting',
+            'before-meal': 'Before Meal',
+            'after-meal-1h': '1hr Post-Meal',
+            'after-meal-2h': '2hr Post-Meal',
+            'bedtime': 'Bedtime'
+        };
+        return map[ctx] || ctx;
+    }
+
+    // ===================== RENDERING =====================
+    function renderFoodLog() {
+        const dateKey = getCurrentDateKey();
+        const data = getData();
+        const entries = data.entries[dateKey] || [];
+        const container = document.getElementById('foodLogEntries');
+
+        if (entries.length === 0) {
+            container.innerHTML = `
+                <div class="empty-state">
+                    <div class="icon">&#127858;</div>
+                    <p>No food logged yet today.<br>Use the form above or tap a quick-add button.</p>
+                </div>`;
+            return;
+        }
+
+        const mealOrder = ['Breakfast', 'Lunch', 'Dinner', 'Snack'];
+        const grouped = {};
+        entries.forEach(e => {
+            if (!grouped[e.meal]) grouped[e.meal] = [];
+            grouped[e.meal].push(e);
+        });
+
+        let html = '';
+        mealOrder.forEach(meal => {
+            if (!grouped[meal]) return;
+            const mealEntries = grouped[meal];
+            const totalCarbs = mealEntries.reduce((s, e) => s + e.carbs, 0);
+
+            html += `<div class="meal-group">
+                <div class="meal-group-header">
+                    <span>${meal}</span>
+                    <span class="carb-total">${totalCarbs.toFixed(1)}g carbs</span>
+                </div>`;
+
+            mealEntries.forEach(e => {
+                html += `<div class="food-item">
+                    <div class="food-info">
+                        <div class="food-name">${escapeHtml(e.name)}</div>
+                        <div class="food-meta">${e.time}${e.portion ? ' &middot; ' + escapeHtml(e.portion) : ''}${e.notes ? ' &middot; ' + escapeHtml(e.notes) : ''}</div>
+                    </div>
+                    <div class="food-macros">
+                        <div><strong>${e.calories}</strong>cal</div>
+                        <div><strong>${e.carbs}g</strong>carb</div>
+                        <div><strong>${e.sugar}g</strong>sugar</div>
+                    </div>
+                    <div class="food-actions">
+                        <button class="delete-btn" onclick="deleteEntry(${e.id})" title="Remove">&times;</button>
+                    </div>
+                </div>`;
+            });
+
+            html += '</div>';
+        });
+
+        container.innerHTML = html;
+    }
+
+    function renderGlucoseLog() {
+        const dateKey = getCurrentDateKey();
+        const data = getData();
+        const readings = data.glucose[dateKey] || [];
+        const container = document.getElementById('glucoseLog');
+
+        if (readings.length === 0) {
+            container.innerHTML = '';
+            return;
+        }
+
+        let html = '<div style="margin-top:12px; border-top:1px solid var(--border); padding-top:8px;">';
+        readings.forEach(r => {
+            const status = getGlucoseStatus(r.value);
+            html += `<div class="glucose-log-item">
+                <span>${r.time} &middot; ${getContextLabel(r.context)}</span>
+                <span>
+                    <strong>${r.value}</strong> mg/dL
+                    <span class="glucose-badge ${status.cls}">${status.label}</span>
+                    <button class="delete-btn" onclick="deleteGlucose(${r.id})" style="margin-left:6px;">&times;</button>
+                </span>
+            </div>`;
+        });
+        html += '</div>';
+        container.innerHTML = html;
+    }
+
+    function updateDailySummary() {
+        const dateKey = getCurrentDateKey();
+        const data = getData();
+        const entries = data.entries[dateKey] || [];
+
+        const totals = entries.reduce((acc, e) => ({
+            cal: acc.cal + e.calories,
+            carbs: acc.carbs + e.carbs,
+            sugar: acc.sugar + e.sugar,
+            fiber: acc.fiber + e.fiber
+        }), { cal: 0, carbs: 0, sugar: 0, fiber: 0 });
+
+        document.getElementById('totalCal').textContent = Math.round(totals.cal);
+        document.getElementById('totalCarb').textContent = totals.carbs.toFixed(1) + 'g';
+        document.getElementById('totalSugar').textContent = totals.sugar.toFixed(1) + 'g';
+        document.getElementById('totalFiber').textContent = totals.fiber.toFixed(1) + 'g';
+
+        // Color coding for carbs (warning > 130g, danger > 200g)
+        const carbBox = document.getElementById('totalCarbBox');
+        carbBox.className = 'macro-item' + (totals.carbs > 200 ? ' danger' : totals.carbs > 130 ? ' warning' : '');
+
+        // Color coding for sugar (warning > 25g, danger > 50g)
+        const sugarBox = document.getElementById('totalSugarBox');
+        sugarBox.className = 'macro-item' + (totals.sugar > 50 ? ' danger' : totals.sugar > 25 ? ' warning' : '');
+    }
+
+    // ===================== SHARE =====================
+    function openShareModal() {
+        const dateKey = getCurrentDateKey();
+        const data = getData();
+        const entries = data.entries[dateKey] || [];
+        const readings = data.glucose[dateKey] || [];
+
+        const dateStr = new Date(dateKey + 'T12:00:00').toLocaleDateString('en-US', {
+            weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+        });
+
+        let text = `GlucoLog - Food & Glucose Log\n`;
+        text += `Date: ${dateStr}\n`;
+        text += `${'='.repeat(44)}\n\n`;
+
+        if (readings.length > 0) {
+            text += `BLOOD GLUCOSE READINGS\n`;
+            text += `${'-'.repeat(30)}\n`;
+            readings.forEach(r => {
+                const status = getGlucoseStatus(r.value);
+                text += `${r.time}  ${r.value} mg/dL (${getContextLabel(r.context)}) - ${status.label}\n`;
+            });
+            text += '\n';
+        }
+
+        const mealOrder = ['Breakfast', 'Lunch', 'Dinner', 'Snack'];
+        const grouped = {};
+        entries.forEach(e => {
+            if (!grouped[e.meal]) grouped[e.meal] = [];
+            grouped[e.meal].push(e);
+        });
+
+        mealOrder.forEach(meal => {
+            if (!grouped[meal]) return;
+            text += `${meal.toUpperCase()}\n`;
+            text += `${'-'.repeat(30)}\n`;
+            grouped[meal].forEach(e => {
+                text += `${e.name}`;
+                if (e.portion) text += ` (${e.portion})`;
+                text += `\n  Cal: ${e.calories} | Carbs: ${e.carbs}g | Sugar: ${e.sugar}g | Fiber: ${e.fiber}g | Protein: ${e.protein}g\n`;
+                if (e.notes) text += `  Note: ${e.notes}\n`;
+            });
+            text += '\n';
+        });
+
+        const totals = entries.reduce((acc, e) => ({
+            cal: acc.cal + e.calories,
+            carbs: acc.carbs + e.carbs,
+            sugar: acc.sugar + e.sugar,
+            fiber: acc.fiber + e.fiber,
+            protein: acc.protein + e.protein
+        }), { cal: 0, carbs: 0, sugar: 0, fiber: 0, protein: 0 });
+
+        text += `DAILY TOTALS\n`;
+        text += `${'-'.repeat(30)}\n`;
+        text += `Calories: ${Math.round(totals.cal)} | Carbs: ${totals.carbs.toFixed(1)}g | Sugar: ${totals.sugar.toFixed(1)}g | Fiber: ${totals.fiber.toFixed(1)}g | Protein: ${totals.protein.toFixed(1)}g\n`;
+        text += `\nGenerated by GlucoLog - Diabetes Nutrition Tracker`;
+
+        document.getElementById('shareContent').textContent = text;
+        document.getElementById('shareModal').classList.add('active');
+    }
+
+    // ===================== DOCTOR REPORT =====================
+    function openReportModal() {
+        document.getElementById('reportContent').style.display = 'none';
+        document.getElementById('reportActions').style.display = 'none';
+        document.getElementById('reportModal').classList.add('active');
+    }
+
+    function generateReport() {
+        const patientName = document.getElementById('patientName').value.trim() || '[Patient Name]';
+        const doctorName = document.getElementById('doctorName').value.trim() || '[Doctor Name]';
+        const diabetesType = document.getElementById('diabetesType').value;
+        const days = parseInt(document.getElementById('reportDays').value);
+        const additionalNotes = document.getElementById('additionalNotes').value.trim();
+
+        // Save settings
+        const data = getData();
+        data.settings.patientName = document.getElementById('patientName').value.trim();
+        data.settings.doctorName = document.getElementById('doctorName').value.trim();
+        data.settings.diabetesType = diabetesType;
+        saveData(data);
+
+        const today = new Date();
+        const endDate = getDateKey(today);
+        const startDateObj = new Date(today);
+        startDateObj.setDate(startDateObj.getDate() - (days - 1));
+        const startDate = getDateKey(startDateObj);
+
+        const endDateFormatted = today.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+        const startDateFormatted = startDateObj.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+
+        // Aggregate data
+        let totalCal = 0, totalCarbs = 0, totalSugar = 0, totalFiber = 0, totalProtein = 0;
+        let daysWithData = 0;
+        let allGlucose = [];
+        let dailyDetails = [];
+
+        for (let d = new Date(startDateObj); d <= today; d.setDate(d.getDate() + 1)) {
+            const dk = getDateKey(d);
+            const dayEntries = data.entries[dk] || [];
+            const dayGlucose = data.glucose[dk] || [];
+
+            if (dayEntries.length > 0 || dayGlucose.length > 0) {
+                daysWithData++;
+                const dayTotals = dayEntries.reduce((acc, e) => ({
+                    cal: acc.cal + e.calories,
+                    carbs: acc.carbs + e.carbs,
+                    sugar: acc.sugar + e.sugar,
+                    fiber: acc.fiber + e.fiber,
+                    protein: acc.protein + e.protein
+                }), { cal: 0, carbs: 0, sugar: 0, fiber: 0, protein: 0 });
+
+                totalCal += dayTotals.cal;
+                totalCarbs += dayTotals.carbs;
+                totalSugar += dayTotals.sugar;
+                totalFiber += dayTotals.fiber;
+                totalProtein += dayTotals.protein;
+
+                dayGlucose.forEach(g => allGlucose.push(g.value));
+
+                const dayLabel = new Date(dk + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+                const glucoseStr = dayGlucose.length > 0
+                    ? dayGlucose.map(g => `${g.value} (${getContextLabel(g.context)})`).join(', ')
+                    : 'No readings';
+
+                dailyDetails.push({
+                    label: dayLabel,
+                    entries: dayEntries.length,
+                    totals: dayTotals,
+                    glucoseStr: glucoseStr,
+                    dayGlucose: dayGlucose,
+                    foods: dayEntries
+                });
+            }
+        }
+
+        const avgCal = daysWithData > 0 ? Math.round(totalCal / daysWithData) : 0;
+        const avgCarbs = daysWithData > 0 ? (totalCarbs / daysWithData).toFixed(1) : 0;
+        const avgSugar = daysWithData > 0 ? (totalSugar / daysWithData).toFixed(1) : 0;
+        const avgFiber = daysWithData > 0 ? (totalFiber / daysWithData).toFixed(1) : 0;
+        const avgProtein = daysWithData > 0 ? (totalProtein / daysWithData).toFixed(1) : 0;
+
+        const avgGlucose = allGlucose.length > 0 ? Math.round(allGlucose.reduce((a, b) => a + b, 0) / allGlucose.length) : 'N/A';
+        const minGlucose = allGlucose.length > 0 ? Math.min(...allGlucose) : 'N/A';
+        const maxGlucose = allGlucose.length > 0 ? Math.max(...allGlucose) : 'N/A';
+
+        const highReadings = allGlucose.filter(v => v > 180).length;
+        const lowReadings = allGlucose.filter(v => v < 70).length;
+        const inRange = allGlucose.filter(v => v >= 70 && v <= 180).length;
+        const inRangePct = allGlucose.length > 0 ? Math.round((inRange / allGlucose.length) * 100) : 'N/A';
+
+        let report = '';
+        report += `PATIENT NUTRITION & GLUCOSE MONITORING REPORT\n`;
+        report += `${'='.repeat(52)}\n\n`;
+        report += `Date Generated:   ${today.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}\n`;
+        report += `Reporting Period:  ${startDateFormatted} - ${endDateFormatted}\n`;
+        report += `Days with Data:    ${daysWithData} of ${days} days\n\n`;
+
+        report += `PATIENT INFORMATION\n`;
+        report += `${'-'.repeat(40)}\n`;
+        report += `Patient Name:      ${patientName}\n`;
+        report += `Attending Provider: ${doctorName}\n`;
+        report += `Diagnosis:         Diabetes Mellitus, ${diabetesType}\n\n`;
+
+        report += `BLOOD GLUCOSE SUMMARY\n`;
+        report += `${'-'.repeat(40)}\n`;
+        report += `Total Readings:    ${allGlucose.length}\n`;
+        report += `Average:           ${avgGlucose} mg/dL\n`;
+        report += `Range:             ${minGlucose} - ${maxGlucose} mg/dL\n`;
+        report += `Time in Range:     ${inRangePct}% (70-180 mg/dL)\n`;
+        report += `Hyperglycemia:     ${highReadings} readings > 180 mg/dL\n`;
+        report += `Hypoglycemia:      ${lowReadings} readings < 70 mg/dL\n\n`;
+
+        report += `DAILY NUTRITIONAL AVERAGES\n`;
+        report += `${'-'.repeat(40)}\n`;
+        report += `Calories:          ${avgCal} kcal/day\n`;
+        report += `Carbohydrates:     ${avgCarbs} g/day\n`;
+        report += `Sugar:             ${avgSugar} g/day\n`;
+        report += `Fiber:             ${avgFiber} g/day\n`;
+        report += `Protein:           ${avgProtein} g/day\n\n`;
+
+        report += `DAILY BREAKDOWN\n`;
+        report += `${'-'.repeat(40)}\n`;
+        dailyDetails.forEach(day => {
+            report += `\n${day.label}\n`;
+            report += `  Glucose: ${day.glucoseStr}\n`;
+            report += `  Nutrition: ${Math.round(day.totals.cal)} cal | ${day.totals.carbs.toFixed(1)}g carb | ${day.totals.sugar.toFixed(1)}g sugar | ${day.totals.fiber.toFixed(1)}g fiber\n`;
+            if (day.foods.length > 0) {
+                report += `  Foods: ${day.foods.map(f => f.name).join(', ')}\n`;
+            }
+        });
+
+        if (additionalNotes) {
+            report += `\n\nPATIENT NOTES\n`;
+            report += `${'-'.repeat(40)}\n`;
+            report += `${additionalNotes}\n`;
+        }
+
+        report += `\n\n${'='.repeat(52)}\n`;
+        report += `This report was self-reported by the patient using\n`;
+        report += `GlucoLog - Diabetes Nutrition Tracker.\n`;
+        report += `Data has not been independently verified.\n`;
+        report += `Please review with the patient during consultation.\n`;
+        report += `${'='.repeat(52)}\n`;
+
+        document.getElementById('reportContent').textContent = report;
+        document.getElementById('reportContent').style.display = 'block';
+        document.getElementById('reportActions').style.display = 'flex';
+    }
+
+    function emailReport() {
+        const doctorName = document.getElementById('doctorName').value.trim() || 'Doctor';
+        const patientName = document.getElementById('patientName').value.trim() || 'Patient';
+        const report = document.getElementById('reportContent').textContent;
+
+        const subject = encodeURIComponent(`Nutrition & Glucose Monitoring Report - ${patientName}`);
+        const body = encodeURIComponent(`Dear ${doctorName},\n\nPlease find below my nutrition and blood glucose monitoring report for your review ahead of our next appointment.\n\n${report}\n\nThank you,\n${patientName}`);
+
+        window.location.href = `mailto:?subject=${subject}&body=${body}`;
+    }
+
+    // ===================== UTILITIES =====================
+    function closeModal(id) {
+        document.getElementById(id).classList.remove('active');
+    }
+
+    function copyToClipboard(elementId) {
+        const text = document.getElementById(elementId).textContent;
+        navigator.clipboard.writeText(text).then(() => {
+            showToast('Copied to clipboard');
+        }).catch(() => {
+            // Fallback
+            const ta = document.createElement('textarea');
+            ta.value = text;
+            document.body.appendChild(ta);
+            ta.select();
+            document.execCommand('copy');
+            document.body.removeChild(ta);
+            showToast('Copied to clipboard');
+        });
+    }
+
+    function showToast(msg) {
+        const toast = document.getElementById('toast');
+        toast.textContent = msg;
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 2500);
+    }
+
+    function escapeHtml(str) {
+        const div = document.createElement('div');
+        div.textContent = str;
+        return div.innerHTML;
+    }
+
+    // Close modals on overlay click
+    document.querySelectorAll('.modal-overlay').forEach(overlay => {
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) overlay.classList.remove('active');
+        });
+    });
+
+    // ===================== TIPS PANEL =====================
+    function toggleTips() {
+        const panel = document.getElementById('tipsPanel');
+        panel.classList.toggle('active');
+        if (panel.classList.contains('active')) {
+            panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    }
+
+    function showTipTab(tabId, btn) {
+        document.querySelectorAll('.tip-section').forEach(s => s.classList.remove('active'));
+        document.querySelectorAll('.tips-tab').forEach(t => t.classList.remove('active'));
+        document.getElementById('tip-' + tabId).classList.add('active');
+        btn.classList.add('active');
+    }
+
+    // Initialize
+    init();
+</script>
+
+</body>
+</html>
